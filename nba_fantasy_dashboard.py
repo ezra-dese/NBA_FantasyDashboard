@@ -16,8 +16,9 @@ from visualizations import (
 )
 from utils import (
     get_filter_options, validate_filters, get_player_summary,
-    format_percentage, format_stat, calculate_league_averages
+    format_percentage, format_stat, calculate_league_averages, get_tag_explanations
 )
+from ai_chatbot import NBAFantasyChatbot
 
 # Page configuration
 st.set_page_config(
@@ -105,7 +106,7 @@ def main():
     filtered_df = apply_filters(df, selected_pos, selected_team, age_range, min_games)
     
     # Main content tabs
-    tab1, tab2, tab3, tab4 = st.tabs(["📊 Overview", "🎯 Top Picks", "📈 Player Analysis", "🔍 Advanced Stats"])
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(["📊 Overview", "🎯 Top Picks", "📈 Player Analysis", "🔍 Advanced Stats", "🤖 AI Assistant"])
     
     with tab1:
         st.header("📊 League Overview")
@@ -156,7 +157,8 @@ def main():
         
         for idx, player in top_20.iterrows():
             player_summary = get_player_summary(player)
-            with st.expander(f"#{player['Fantasy_Rank']} {player_summary['name']} ({player_summary['team']}) - {player_summary['position']}"):
+            tags_display = f" {player_summary['tags']}" if player_summary['tags'] else ""
+            with st.expander(f"#{player['Fantasy_Rank']} {player_summary['name']} ({player_summary['team']}) - {player_summary['position']}{tags_display}"):
                 col1, col2, col3 = st.columns(3)
                 
                 with col1:
@@ -177,6 +179,9 @@ def main():
                 st.write(f"**Player Type:** {player_summary['player_type']}")
                 st.write(f"**Games Played:** {player_summary['games']}")
                 st.write(f"**Minutes per Game:** {format_stat(player_summary['minutes'])}")
+                
+                if player_summary['tags']:
+                    st.write(f"**Tags:** {player_summary['tags']}")
         
         # Fantasy points vs efficiency scatter plot
         fig = create_fantasy_vs_efficiency_scatter(ranked_df, 50)
@@ -247,6 +252,57 @@ def main():
         with col2:
             fig = create_team_analysis_chart(team_stats, 'scatter')
             st.plotly_chart(fig, use_container_width=True)
+    
+    with tab5:
+        st.header("🤖 AI Assistant")
+        st.write("Ask me anything about NBA players, stats, or fantasy recommendations!")
+        
+        # Initialize chatbot
+        if 'chatbot' not in st.session_state:
+            st.session_state.chatbot = NBAFantasyChatbot(filtered_df)
+        
+        # Chat interface
+        user_input = st.text_input("Ask me anything:", placeholder="e.g., 'Tell me about LeBron James' or 'Top fantasy players'")
+        
+        if st.button("Ask") or user_input:
+            if user_input:
+                with st.spinner("Thinking..."):
+                    response = st.session_state.chatbot.process_query(user_input)
+                st.markdown(response)
+        
+        # Tag explanations
+        st.subheader("🏷️ Player Tags Explained")
+        tag_explanations = get_tag_explanations()
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            for emoji, explanation in list(tag_explanations.items())[:4]:
+                st.write(f"{emoji} **{explanation}**")
+        
+        with col2:
+            for emoji, explanation in list(tag_explanations.items())[4:]:
+                st.write(f"{emoji} **{explanation}**")
+        
+        # Example queries
+        st.subheader("💡 Example Queries")
+        st.write("Try asking me:")
+        
+        example_queries = [
+            "Tell me about Nikola Jokic",
+            "Top fantasy players",
+            "Best point guards",
+            "Compare LeBron James vs Stephen Curry",
+            "Fantasy sleepers",
+            "Lakers players",
+            "Who should I draft first?"
+        ]
+        
+        for query in example_queries:
+            if st.button(f"💬 {query}", key=f"example_{query}"):
+                with st.spinner("Thinking..."):
+                    response = st.session_state.chatbot.process_query(query)
+                st.markdown(response)
     
     # Footer
     st.markdown("---")

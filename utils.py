@@ -56,7 +56,21 @@ def get_player_summary(player_data: pd.Series) -> Dict:
         'three_p_percentage': player_data['3P%'],
         'ft_percentage': player_data['FT%'],
         'player_type': player_data['Player_Type'],
-        'minutes': player_data['MP']
+        'minutes': player_data['MP'],
+        'tags': player_data.get('Tags', '')
+    }
+
+def get_tag_explanations() -> Dict[str, str]:
+    """Get explanations for player tags"""
+    return {
+        '🏹': 'Shooter - 3P% > 40%',
+        '🏀': 'Board Man - TRB > 8',
+        '🎯': 'Playmaker - AST > 8',
+        '🔥': 'Scorer - PTS > 25',
+        '🛡️': 'Defender - STL + BLK > 3',
+        '⚡': 'Efficient - FG% > 55% & 3P% > 40%',
+        '💎': 'Clutch - FT% > 90%',
+        '💪': 'Iron Man - G > 75'
     }
 
 def format_percentage(value: float) -> str:

@@ -18,6 +18,9 @@ def load_data():
         # Clean the data
         df = df.dropna(subset=['Player', 'PTS', 'TRB', 'AST'])
         
+        # Handle duplicate players (players who played for multiple teams)
+        df = handle_duplicate_players(df)
+        
         # Calculate fantasy points (standard scoring)
         df['Fantasy_Points'] = (
             df['PTS'] * 1 +           # Points
@@ -32,6 +35,9 @@ def load_data():
         df['PER'] = df['PTS'] + df['TRB'] + df['AST'] + df['STL'] + df['BLK'] - df['TOV']
         df['Usage_Rate'] = (df['FGA'] + df['FTA'] * 0.44 + df['AST']) / df['MP'] * 100
         
+        # Add player tags
+        df = add_player_tags(df)
+        
         # Create player clusters for similar players
         df = create_player_clusters(df)
         
@@ -39,6 +45,94 @@ def load_data():
     except Exception as e:
         print(f"Error loading data: {e}")
         return pd.DataFrame()
+
+def handle_duplicate_players(df):
+    """Handle players who played for multiple teams"""
+    # Create a copy to work with
+    processed_df = df.copy()
+    
+    # Find players with multiple entries
+    player_counts = processed_df['Player'].value_counts()
+    duplicate_players = player_counts[player_counts > 1].index.tolist()
+    
+    # For each duplicate player, keep only the 2TM/3TM row (combined stats)
+    for player in duplicate_players:
+        player_rows = processed_df[processed_df['Player'] == player]
+        
+        # Check if there's a 2TM/3TM row
+        tm_rows = player_rows[player_rows['Team'].str.contains('TM', na=False)]
+        
+        if not tm_rows.empty:
+            # Keep the 2TM/3TM row and remove individual team rows
+            tm_row = tm_rows.iloc[0]
+            
+            # Extract the last team from the 2TM/3TM notation
+            # For now, we'll keep the 2TM/3TM notation but could extract individual teams
+            processed_df = processed_df[~((processed_df['Player'] == player) & 
+                                        (~processed_df['Team'].str.contains('TM', na=False)))]
+        else:
+            # If no 2TM/3TM row, keep the row with highest fantasy points
+            # Calculate fantasy points for comparison
+            player_rows_copy = player_rows.copy()
+            player_rows_copy['temp_fantasy'] = (
+                player_rows_copy['PTS'] * 1 + 
+                player_rows_copy['TRB'] * 1.2 + 
+                player_rows_copy['AST'] * 1.5 + 
+                player_rows_copy['STL'] * 2 + 
+                player_rows_copy['BLK'] * 2 - 
+                player_rows_copy['TOV']
+            )
+            
+            # Keep the row with highest fantasy points
+            best_row = player_rows_copy.loc[player_rows_copy['temp_fantasy'].idxmax()]
+            processed_df = processed_df[~((processed_df['Player'] == player) & 
+                                        (processed_df.index != best_row.name))]
+    
+    return processed_df
+
+def add_player_tags(df):
+    """Add emoji-based player tags based on performance"""
+    df = df.copy()
+    
+    # Initialize tags column
+    df['Tags'] = ''
+    
+    # Shooter tag - 3P% > 40%
+    shooter_mask = df['3P%'] > 0.40
+    df.loc[shooter_mask, 'Tags'] += '🏹 '
+    
+    # Board Man tag - TRB > 8
+    board_man_mask = df['TRB'] > 8
+    df.loc[board_man_mask, 'Tags'] += '🏀 '
+    
+    # Playmaker tag - AST > 8
+    playmaker_mask = df['AST'] > 8
+    df.loc[playmaker_mask, 'Tags'] += '🎯 '
+    
+    # Scorer tag - PTS > 25
+    scorer_mask = df['PTS'] > 25
+    df.loc[scorer_mask, 'Tags'] += '🔥 '
+    
+    # Defender tag - STL + BLK > 3
+    defender_mask = (df['STL'] + df['BLK']) > 3
+    df.loc[defender_mask, 'Tags'] += '🛡️ '
+    
+    # Efficient tag - FG% > 55% and 3P% > 40%
+    efficient_mask = (df['FG%'] > 0.55) & (df['3P%'] > 0.40)
+    df.loc[efficient_mask, 'Tags'] += '⚡ '
+    
+    # Clutch tag - FT% > 90%
+    clutch_mask = df['FT%'] > 0.90
+    df.loc[clutch_mask, 'Tags'] += '💎 '
+    
+    # Iron Man tag - G > 75
+    iron_man_mask = df['G'] > 75
+    df.loc[iron_man_mask, 'Tags'] += '💪 '
+    
+    # Clean up tags (remove trailing spaces)
+    df['Tags'] = df['Tags'].str.strip()
+    
+    return df
 
 def create_player_clusters(df):
     """Create player clusters for similar players using K-means"""
@@ -82,7 +176,7 @@ def apply_filters(df, position='All', team='All', age_range=(19, 40), min_games=
     return filtered_df
 
 def create_fantasy_ranking(df, min_games=20):
-    """Create fantasy ranking based on multiple factors"""
+    """Create fantasy ranking based on fantasy points (primary) and other factors"""
     # Filter players with minimum games
     df_filtered = df[df['G'] >= min_games].copy()
     
@@ -94,8 +188,8 @@ def create_fantasy_ranking(df, min_games=20):
         (df_filtered['FG%'] + df_filtered['3P%'] + df_filtered['FT%']) / 3 * 0.1
     )
     
-    # Rank players
-    df_filtered = df_filtered.sort_values('Weighted_Fantasy_Score', ascending=False)
+    # Rank players by Fantasy Points (primary) and Weighted Score (secondary)
+    df_filtered = df_filtered.sort_values(['Fantasy_Points', 'Weighted_Fantasy_Score'], ascending=False)
     df_filtered['Fantasy_Rank'] = range(1, len(df_filtered) + 1)
     
     return df_filtered
