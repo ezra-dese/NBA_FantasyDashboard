@@ -143,8 +143,8 @@ def create_fantasy_ranking(df, min_games=20):
         (df_filtered['FG%'] + df_filtered['3P%'] + df_filtered['FT%']) / 3 * 0.1
     )
     
-    # Rank players by Fantasy Points (primary) and Weighted Score (secondary)
-    df_filtered = df_filtered.sort_values(['Fantasy_Points', 'Weighted_Fantasy_Score'], ascending=False)
+    # Rank players by Fantasy Points ONLY (as requested)
+    df_filtered = df_filtered.sort_values('Fantasy_Points', ascending=False)
     df_filtered['Fantasy_Rank'] = range(1, len(df_filtered) + 1)
     
     return df_filtered
