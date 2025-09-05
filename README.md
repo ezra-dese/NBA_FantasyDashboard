@@ -134,7 +134,7 @@ Weighted Score = (Fantasy Points × 0.4) + (PER × 0.3) + (Usage Rate × 0.2) + 
 
 ## 🌐 Deploying to GitHub Pages
 
-### Option 1: Streamlit Cloud (Recommended)
+### Streamlit Cloud (Recommended)
 
 1. **Push to GitHub**
    ```bash
@@ -151,56 +151,9 @@ Weighted Score = (Fantasy Points × 0.4) + (PER × 0.3) + (Usage Rate × 0.2) + 
    - Set main file path: `nba_fantasy_dashboard.py`
    - Click "Deploy"
 
-3. **Your app will be live at**: `https://ezra-dese-nba-fantasydashboard-app-xxxxx.streamlit.app/`
+3. **Your app will be live at**: `[https://ezra-dese-nba-fantasydashboard-app-xxxxx.streamlit.app/](https://nbafantasydashboard-c9djpqjxbgcry9aopse2aq.streamlit.app/)`
 
 > 📖 **Detailed deployment instructions**: See [DEPLOYMENT.md](DEPLOYMENT.md) for comprehensive setup guides.
-
-### Option 2: Heroku Deployment
-
-1. **Create a Procfile**
-   ```bash
-   echo "web: streamlit run nba_fantasy_dashboard.py --server.port=$PORT --server.address=0.0.0.0" > Procfile
-   ```
-
-2. **Create setup.sh**
-   ```bash
-   echo "mkdir -p ~/.streamlit/
-   echo \"[server]
-   headless = true
-   port = $PORT
-   enableCORS = false
-   \" > ~/.streamlit/config.toml" > setup.sh
-   ```
-
-3. **Deploy to Heroku**
-   ```bash
-   heroku create your-app-name
-   git push heroku main
-   ```
-
-### Option 3: Docker Deployment
-
-1. **Create Dockerfile**
-   ```dockerfile
-   FROM python:3.9-slim
-   
-   WORKDIR /app
-   
-   COPY requirements.txt .
-   RUN pip install -r requirements.txt
-   
-   COPY . .
-   
-   EXPOSE 8501
-   
-   CMD ["streamlit", "run", "nba_fantasy_dashboard.py", "--server.address", "0.0.0.0"]
-   ```
-
-2. **Build and run**
-   ```bash
-   docker build -t nba-fantasy-dashboard .
-   docker run -p 8501:8501 nba-fantasy-dashboard
-   ```
 
 ## 🔧 Configuration
 
