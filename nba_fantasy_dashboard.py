@@ -16,7 +16,7 @@ from visualizations import (
 )
 from utils import (
     get_filter_options, validate_filters, get_player_summary,
-    format_percentage, format_stat, calculate_league_averages, get_tag_explanations
+    format_percentage, format_stat, calculate_league_averages
 )
 from ai_chatbot import NBAFantasyChatbot
 
@@ -61,6 +61,19 @@ st.markdown("""
 def get_cached_data():
     """Get cached data using the data processing module"""
     return load_data()
+
+def get_tag_explanations():
+    """Get explanations for player tags"""
+    return {
+        '🏹': 'Shooter - 3P% > 40%',
+        '🏀': 'Board Man - TRB > 8',
+        '🎯': 'Playmaker - AST > 8',
+        '🔥': 'Scorer - PTS > 25',
+        '🛡️': 'Defender - STL + BLK > 3',
+        '⚡': 'Efficient - FG% > 55% & 3P% > 40%',
+        '💎': 'Clutch - FT% > 90%',
+        '💪': 'Iron Man - G > 75'
+    }
 
 def main():
     # Header
