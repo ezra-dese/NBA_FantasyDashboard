@@ -42,6 +42,6 @@ echo    - Select your repository
 echo    - Set main file: nba_fantasy_dashboard.py
 echo    - Click 'Deploy'
 echo.
-echo 🚀 Your dashboard will be live at: https://ezra-dese-nba-fantasydashboard-app-xxxxx.streamlit.app/
+echo 🚀 Your dashboard will be live at: https://nbafantasydashboard-c9djpqjxbgcry9aopse2aq.streamlit.app/
 echo.
 pause

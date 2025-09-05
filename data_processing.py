@@ -35,8 +35,6 @@ def load_data():
         df['PER'] = df['PTS'] + df['TRB'] + df['AST'] + df['STL'] + df['BLK'] - df['TOV']
         df['Usage_Rate'] = (df['FGA'] + df['FTA'] * 0.44 + df['AST']) / df['MP'] * 100
         
-        # Add player tags
-        df = add_player_tags(df)
         
         # Create player clusters for similar players
         df = create_player_clusters(df)
@@ -90,49 +88,6 @@ def handle_duplicate_players(df):
     
     return processed_df
 
-def add_player_tags(df):
-    """Add emoji-based player tags based on performance"""
-    df = df.copy()
-    
-    # Initialize tags column
-    df['Tags'] = ''
-    
-    # Shooter tag - 3P% > 40%
-    shooter_mask = df['3P%'] > 0.40
-    df.loc[shooter_mask, 'Tags'] += '🏹 '
-    
-    # Board Man tag - TRB > 8
-    board_man_mask = df['TRB'] > 8
-    df.loc[board_man_mask, 'Tags'] += '🏀 '
-    
-    # Playmaker tag - AST > 8
-    playmaker_mask = df['AST'] > 8
-    df.loc[playmaker_mask, 'Tags'] += '🎯 '
-    
-    # Scorer tag - PTS > 25
-    scorer_mask = df['PTS'] > 25
-    df.loc[scorer_mask, 'Tags'] += '🔥 '
-    
-    # Defender tag - STL + BLK > 3
-    defender_mask = (df['STL'] + df['BLK']) > 3
-    df.loc[defender_mask, 'Tags'] += '🛡️ '
-    
-    # Efficient tag - FG% > 55% and 3P% > 40%
-    efficient_mask = (df['FG%'] > 0.55) & (df['3P%'] > 0.40)
-    df.loc[efficient_mask, 'Tags'] += '⚡ '
-    
-    # Clutch tag - FT% > 90%
-    clutch_mask = df['FT%'] > 0.90
-    df.loc[clutch_mask, 'Tags'] += '💎 '
-    
-    # Iron Man tag - G > 75
-    iron_man_mask = df['G'] > 75
-    df.loc[iron_man_mask, 'Tags'] += '💪 '
-    
-    # Clean up tags (remove trailing spaces)
-    df['Tags'] = df['Tags'].str.strip()
-    
-    return df
 
 def create_player_clusters(df):
     """Create player clusters for similar players using K-means"""

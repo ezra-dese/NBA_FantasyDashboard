@@ -112,9 +112,6 @@ class NBAFantasyChatbot:
         response += f"• Fantasy Points: {player['Fantasy_Points']:.1f}\n"
         response += f"• Player Type: {player['Player_Type']}\n"
         
-        if player.get('Tags'):
-            response += f"• Tags: {player['Tags']}\n"
-        
         # Add insights
         if player['Fantasy_Points'] > 40:
             response += f"\n🔥 **Fantasy Impact:** Elite fantasy player with {player['Fantasy_Points']:.1f} fantasy points per game!"
