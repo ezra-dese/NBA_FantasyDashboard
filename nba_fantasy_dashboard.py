@@ -306,11 +306,10 @@ def main():
             st.markdown("""
             ### 🎯 **The Story Behind This Dashboard**
             
-            Hi there! I'm **Ezra Dese**, a mechanical engineer who got bored with traditional engineering work and decided to channel my analytical skills into something more exciting - **winning fantasy basketball**! 🏀
+            Hi there! I'm **Ezra Dese**, an engineer who got bored and NEEDS to start **winning fantasy basketball**! 🏀
             
             ### 🔧 **Background**
             - **Mechanical Engineer** by training
-            - **Data Analysis Enthusiast** by passion
             - **Fantasy Basketball Addict** by choice
             - **Python Developer** by necessity (to build this dashboard!)
             
@@ -380,7 +379,7 @@ def main():
         st.subheader("🎯 **Fun Facts**")
         
         st.markdown("""
-        - 🏀 **Favorite NBA Team**: Changes based on who has the best fantasy players!
+        - 🏀 **Favorite NBA Team**: SACTOWN BABYYYYY!
         - 📊 **Data Points Analyzed**: Over 15,000 individual player statistics
         - 🤖 **AI Responses**: The chatbot can answer 50+ different types of queries
         - ⚡ **Performance**: Dashboard loads in under 3 seconds
