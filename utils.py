@@ -40,30 +40,37 @@ def calculate_weighted_fantasy_score(row: pd.Series) -> float:
 
 def get_player_summary(player_data: pd.Series) -> Dict:
     """Get summary statistics for a player"""
+    # Helper function to safely get values with defaults
+    def safe_get(key, default=0.0):
+        try:
+            return player_data[key]
+        except KeyError:
+            return default
+    
     return {
-        'name': player_data['Player'],
-        'team': player_data['Team'],
-        'position': player_data['Pos'],
-        'age': player_data['Age'],
-        'games': player_data['G'],
-        'fantasy_points': player_data['Fantasy_Points'],
-        'points': player_data['PTS'],
-        'rebounds': player_data['TRB'],
-        'assists': player_data['AST'],
-        'steals': player_data['STL'],
-        'blocks': player_data['BLK'],
-        'fg_percentage': player_data['FG%'],
-        'three_p_percentage': player_data['3P%'],
-        'ft_percentage': player_data['FT%'],
-        'turnovers': player_data['TOV'],
-        'efg_percentage': player_data['eFG%'],
-        'ts_percentage': player_data['TS%'],
-        'ftr': player_data['FTR'],
-        'ast_tov_ratio': player_data['AST_TOV_Ratio'],
-        'hast_percentage': player_data['hAST%'],
-        'tov_percentage': player_data['TOV%'],
-        'player_type': player_data['Player_Type'],
-        'minutes': player_data['MP']
+        'name': safe_get('Player', 'Unknown'),
+        'team': safe_get('Team', 'Unknown'),
+        'position': safe_get('Pos', 'Unknown'),
+        'age': safe_get('Age', 0),
+        'games': safe_get('G', 0),
+        'fantasy_points': safe_get('Fantasy_Points', 0.0),
+        'points': safe_get('PTS', 0.0),
+        'rebounds': safe_get('TRB', 0.0),
+        'assists': safe_get('AST', 0.0),
+        'steals': safe_get('STL', 0.0),
+        'blocks': safe_get('BLK', 0.0),
+        'fg_percentage': safe_get('FG%', 0.0),
+        'three_p_percentage': safe_get('3P%', 0.0),
+        'ft_percentage': safe_get('FT%', 0.0),
+        'turnovers': safe_get('TOV', 0.0),
+        'efg_percentage': safe_get('eFG%', 0.0),
+        'ts_percentage': safe_get('TS%', 0.0),
+        'ftr': safe_get('FTR', 0.0),
+        'ast_tov_ratio': safe_get('AST_TOV_Ratio', 0.0),
+        'hast_percentage': safe_get('hAST%', 0.0),
+        'tov_percentage': safe_get('TOV%', 0.0),
+        'player_type': safe_get('Player_Type', 'Other'),
+        'minutes': safe_get('MP', 0.0)
     }
 
 

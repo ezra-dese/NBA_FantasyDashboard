@@ -35,24 +35,26 @@ def load_data():
         df['PER'] = df['PTS'] + df['TRB'] + df['AST'] + df['STL'] + df['BLK'] - df['TOV']
         df['Usage_Rate'] = (df['FGA'] + df['FTA'] * 0.44 + df['AST']) / df['MP'] * 100
         
-        # Calculate advanced metrics
-        # Effective Field Goal Percentage (eFG%) = (FG + .5 * 3P) / FGA
-        df['eFG%'] = (df['FG'] + 0.5 * df['3P']) / df['FGA']
+        # Calculate advanced metrics with error handling
+        # Note: eFG% already exists in the Excel file, so we don't need to calculate it
         
         # True Shooting Percentage (TS%) = Pts / (2 * (FGA + .475 * FTA))
-        df['TS%'] = df['PTS'] / (2 * (df['FGA'] + 0.475 * df['FTA']))
+        denominator_ts = 2 * (df['FGA'] + 0.475 * df['FTA'])
+        df['TS%'] = np.where(denominator_ts > 0, df['PTS'] / denominator_ts, 0)
         
         # Free Throw Rate (FTR) = FT / FGA
-        df['FTR'] = df['FT'] / df['FGA']
+        df['FTR'] = np.where(df['FGA'] > 0, df['FT'] / df['FGA'], 0)
         
         # Assist to Turnover ratio
-        df['AST_TOV_Ratio'] = df['AST'] / df['TOV'].replace(0, 0.1)  # Avoid division by zero
+        df['AST_TOV_Ratio'] = np.where(df['TOV'] > 0, df['AST'] / df['TOV'], df['AST'] / 0.1)
         
         # Hollinger Assist Ratio (hAST%) = AST / (FGA + .475 * FTA + AST + TOV)
-        df['hAST%'] = df['AST'] / (df['FGA'] + 0.475 * df['FTA'] + df['AST'] + df['TOV'])
+        denominator_hast = df['FGA'] + 0.475 * df['FTA'] + df['AST'] + df['TOV']
+        df['hAST%'] = np.where(denominator_hast > 0, df['AST'] / denominator_hast, 0)
         
         # Turnover Percentage (TOV%) = TOV / (FGA + .475*FTA + AST + TOV)
-        df['TOV%'] = df['TOV'] / (df['FGA'] + 0.475 * df['FTA'] + df['AST'] + df['TOV'])
+        denominator_tov = df['FGA'] + 0.475 * df['FTA'] + df['AST'] + df['TOV']
+        df['TOV%'] = np.where(denominator_tov > 0, df['TOV'] / denominator_tov, 0)
         
         
         # Create player clusters for similar players

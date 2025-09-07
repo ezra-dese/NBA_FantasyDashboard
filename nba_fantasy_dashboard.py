@@ -57,7 +57,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-@st.cache_data
+@st.cache_data(ttl=300)  # Cache for 5 minutes to allow for updates
 def get_cached_data():
     """Get cached data using the data processing module"""
     return load_data()
