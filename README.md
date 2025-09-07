@@ -71,6 +71,10 @@ This modular design makes the code:
    - The dashboard will automatically open at `http://localhost:8501`
    - If it doesn't open automatically, copy the URL from the terminal
 
+OR
+
+Use the streamlit app hosting: https://nbafantasydashboard-c9djpqjxbgcry9aopse2aq.streamlit.app/
+
 ## 📁 Project Structure
 
 ```
@@ -121,7 +125,7 @@ Use the sidebar filters to narrow down players by:
 The dashboard uses a comprehensive fantasy scoring system:
 
 - **Points**: 1 point per point scored
-- **Rebounds**: 1.2 points per rebound
+- **Rebounds**: 1.25 points per rebound
 - **Assists**: 1.5 points per assist
 - **Steals**: 2 points per steal
 - **Blocks**: 2 points per block
@@ -130,47 +134,6 @@ The dashboard uses a comprehensive fantasy scoring system:
 ### Weighted Fantasy Score Formula
 ```
 Weighted Score = (Fantasy Points × 0.4) + (PER × 0.3) + (Usage Rate × 0.2) + (Shooting % × 0.1)
-```
-
-## 🌐 Deploying to GitHub Pages
-
-### Streamlit Cloud (Recommended)
-
-1. **Push to GitHub**
-   ```bash
-   git add .
-   git commit -m "Initial NBA Fantasy Dashboard"
-   git push origin main
-   ```
-
-2. **Deploy on Streamlit Cloud**
-   - Go to [share.streamlit.io](https://share.streamlit.io)
-   - Sign in with your GitHub account
-   - Click "New app"
-   - Select your repository: `ezra-dese/NBA_FantasyDashboard`
-   - Set main file path: `nba_fantasy_dashboard.py`
-   - Click "Deploy"
-
-3. **Your app will be live at**: `[https://ezra-dese-nba-fantasydashboard-app-xxxxx.streamlit.app/](https://nbafantasydashboard-c9djpqjxbgcry9aopse2aq.streamlit.app/)`
-
-> 📖 **Detailed deployment instructions**: See [DEPLOYMENT.md](DEPLOYMENT.md) for comprehensive setup guides.
-
-## 🔧 Configuration
-
-### Streamlit Configuration
-Create `.streamlit/config.toml` for custom settings:
-
-```toml
-[server]
-headless = true
-port = 8501
-enableCORS = false
-
-[theme]
-primaryColor = "#1f77b4"
-backgroundColor = "#ffffff"
-secondaryBackgroundColor = "#f0f2f6"
-textColor = "#262730"
 ```
 
 ## 📊 Data Source
@@ -196,17 +159,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🙏 Acknowledgments
 
 - NBA for providing player statistics
+- Hamidat Bello for her love and support
 - Streamlit team for the amazing framework
 - Plotly for interactive visualizations
 - The fantasy basketball community for inspiration
-
-## 📞 Support
-
-If you encounter any issues or have questions:
-
-1. Check the [Issues](https://github.com/yourusername/NBA_FantasyDashboard/issues) page
-2. Create a new issue with detailed description
-3. Contact: [your-email@example.com]
 
 ---
 
