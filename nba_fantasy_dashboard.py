@@ -5,16 +5,14 @@ import numpy as np
 # Import custom modules
 from data_processing import (
     load_data, apply_filters, create_fantasy_ranking, 
-    get_similar_players, get_team_stats, get_position_stats,
-    get_advanced_stats, get_players_for_comparison
+    get_similar_players, get_team_stats, get_position_stats
 )
 from visualizations import (
     create_fantasy_distribution_chart, create_top_players_chart,
     create_player_type_pie_chart, create_fantasy_vs_efficiency_scatter,
     create_player_radar_chart, create_correlation_heatmap,
     create_position_analysis_chart, create_team_analysis_chart,
-    create_metric_cards_data, create_advanced_stats_chart,
-    create_multi_player_comparison_chart
+    create_metric_cards_data
 )
 from utils import (
     get_filter_options, validate_filters, get_player_summary,
@@ -243,21 +241,6 @@ def main():
     with tab4:
         st.header("🔍 Advanced Statistics")
         
-        # Advanced Statistics Section
-        st.subheader("📊 Advanced Basketball Metrics")
-        
-        # Get advanced stats
-        advanced_stats = get_advanced_stats(filtered_df)
-        
-        # Display advanced stats table
-        st.subheader("Advanced Statistics Table")
-        st.dataframe(advanced_stats, use_container_width=True)
-        
-        # Advanced stats visualization
-        st.subheader("Advanced Statistics Charts")
-        fig = create_advanced_stats_chart(advanced_stats, 20)
-        st.plotly_chart(fig, use_container_width=True)
-        
         # Statistical analysis
         col1, col2 = st.columns(2)
         
@@ -272,42 +255,6 @@ def main():
             team_stats = get_team_stats(filtered_df)
             fig = create_team_analysis_chart(team_stats, 'avg', 15)
             st.plotly_chart(fig, use_container_width=True)
-        
-        # Multi-Player Comparison Section
-        st.subheader("🆚 Multi-Player Comparison")
-        st.write("Select up to 5 players to compare their statistics:")
-        
-        # Get available players
-        available_players = sorted(filtered_df['Player'].unique().tolist())
-        
-        # Player selection
-        selected_players = st.multiselect(
-            "Choose players to compare (up to 5):",
-            available_players,
-            default=[],
-            max_selections=5
-        )
-        
-        if len(selected_players) >= 2:
-            # Get comparison data
-            comparison_data = get_players_for_comparison(filtered_df, selected_players)
-            
-            if len(comparison_data) >= 2:
-                # Create comparison chart
-                fig = create_multi_player_comparison_chart(comparison_data)
-                if fig:
-                    st.plotly_chart(fig, use_container_width=True)
-                
-                # Display comparison table
-                st.subheader("Player Comparison Table")
-                comparison_df = pd.DataFrame(comparison_data).T
-                comparison_df = comparison_df[['Team', 'Pos', 'Player_Type', 'PTS', 'TRB', 'AST', 'STL', 'BLK', 
-                                             'FG%', '3P%', 'FT%', 'Fantasy_Points', 'AST_TOV_Ratio', 'TS%', 'eFG%']]
-                st.dataframe(comparison_df, use_container_width=True)
-            else:
-                st.warning("Please select at least 2 valid players for comparison.")
-        else:
-            st.info("Please select at least 2 players to see the comparison.")
     
     with tab5:
         st.header("🤖 AI Assistant")
@@ -331,62 +278,21 @@ def main():
         st.subheader("💡 Example Queries")
         st.write("Try asking me:")
         
-        # Categorize example queries
-        col1, col2 = st.columns(2)
+        example_queries = [
+            "Tell me about Nikola Jokic",
+            "Top fantasy players",
+            "Best point guards",
+            "Compare LeBron James vs Stephen Curry",
+            "Fantasy sleepers",
+            "Lakers players",
+            "Who should I draft first?"
+        ]
         
-        with col1:
-            st.write("**🔍 Player Information:**")
-            player_queries = [
-                "Tell me about Nikola Jokic",
-                "Who is Stephen Curry?",
-                "Show me LeBron James stats"
-            ]
-            
-            for query in player_queries:
-                if st.button(f"💬 {query}", key=f"player_{query}"):
-                    with st.spinner("Thinking..."):
-                        response = st.session_state.chatbot.process_query(query)
-                    st.markdown(response)
-            
-            st.write("**📊 Statistical Queries:**")
-            stat_queries = [
-                "Top fantasy players",
-                "Best scorers",
-                "Top rebounders"
-            ]
-            
-            for query in stat_queries:
-                if st.button(f"💬 {query}", key=f"stat_{query}"):
-                    with st.spinner("Thinking..."):
-                        response = st.session_state.chatbot.process_query(query)
-                    st.markdown(response)
-        
-        with col2:
-            st.write("**⚖️ Player Comparisons:**")
-            comparison_queries = [
-                "Compare LeBron James vs Stephen Curry",
-                "Luka Doncic vs Nikola Jokic who is better?",
-                "Compare Giannis vs Durant"
-            ]
-            
-            for query in comparison_queries:
-                if st.button(f"💬 {query}", key=f"comp_{query}"):
-                    with st.spinner("Thinking..."):
-                        response = st.session_state.chatbot.process_query(query)
-                    st.markdown(response)
-            
-            st.write("**🎯 Fantasy Recommendations:**")
-            fantasy_queries = [
-                "Fantasy sleepers",
-                "Best point guards",
-                "Who should I draft first?"
-            ]
-            
-            for query in fantasy_queries:
-                if st.button(f"💬 {query}", key=f"fantasy_{query}"):
-                    with st.spinner("Thinking..."):
-                        response = st.session_state.chatbot.process_query(query)
-                    st.markdown(response)
+        for query in example_queries:
+            if st.button(f"💬 {query}", key=f"example_{query}"):
+                with st.spinner("Thinking..."):
+                    response = st.session_state.chatbot.process_query(query)
+                st.markdown(response)
     
     with tab6:
         st.header("👨‍💻 About the Author")

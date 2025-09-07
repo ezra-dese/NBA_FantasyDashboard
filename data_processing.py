@@ -35,9 +35,6 @@ def load_data():
         df['PER'] = df['PTS'] + df['TRB'] + df['AST'] + df['STL'] + df['BLK'] - df['TOV']
         df['Usage_Rate'] = (df['FGA'] + df['FTA'] * 0.44 + df['AST']) / df['MP'] * 100
         
-        # Calculate advanced statistics
-        df = calculate_advanced_stats(df)
-        
         
         # Create player clusters for similar players
         df = create_player_clusters(df)
@@ -91,30 +88,6 @@ def handle_duplicate_players(df):
     
     return processed_df
 
-def calculate_advanced_stats(df):
-    """Calculate advanced basketball statistics"""
-    # Assist to turnover ratio
-    df['AST_TOV_Ratio'] = df['AST'] / df['TOV'].replace(0, 0.1)  # Avoid division by zero
-    
-    # True shooting percentage: PTS / (2 * (FGA + .475 * FTA))
-    df['TS%'] = df['PTS'] / (2 * (df['FGA'] + 0.475 * df['FTA']))
-    
-    # Effective field goal percentage: (FG + .5 * 3P) / FGA
-    df['eFG%'] = (df['FG'] + 0.5 * df['3P']) / df['FGA']
-    
-    # Free throw rate: FTA / FGA
-    df['FTR'] = df['FTA'] / df['FGA'].replace(0, 0.1)  # Avoid division by zero
-    
-    # Hollinger Assist Ratio (hAST%) = AST / (FGA + .475 * FTA + AST + TOV)
-    df['hAST%'] = df['AST'] / (df['FGA'] + 0.475 * df['FTA'] + df['AST'] + df['TOV'])
-    
-    # Turnover Percentage (TOV%) = TOV / (FGA + .475*FTA + AST + TOV)
-    df['TOV%'] = df['TOV'] / (df['FGA'] + 0.475 * df['FTA'] + df['AST'] + df['TOV'])
-    
-    # %PTS 3PT: Percent of Points that are three points
-    df['%PTS_3PT'] = (df['3P'] * 3) / df['PTS'].replace(0, 0.1)  # Avoid division by zero
-    
-    return df
 
 def create_player_clusters(df):
     """Create player types using rule-based classification for each position"""
@@ -261,28 +234,3 @@ def get_position_stats(df):
     
     return position_stats
 
-def get_advanced_stats(df):
-    """Get advanced statistics for display"""
-    advanced_stats = df[['Player', 'Team', 'Pos', 'Player_Type', 
-                        'AST_TOV_Ratio', 'TS%', 'eFG%', 'FTR', 
-                        'hAST%', 'TOV%', '%PTS_3PT']].copy()
-    
-    # Round the advanced stats to appropriate decimal places
-    advanced_stats['AST_TOV_Ratio'] = advanced_stats['AST_TOV_Ratio'].round(2)
-    advanced_stats['TS%'] = (advanced_stats['TS%'] * 100).round(1)
-    advanced_stats['eFG%'] = (advanced_stats['eFG%'] * 100).round(1)
-    advanced_stats['FTR'] = advanced_stats['FTR'].round(2)
-    advanced_stats['hAST%'] = (advanced_stats['hAST%'] * 100).round(1)
-    advanced_stats['TOV%'] = (advanced_stats['TOV%'] * 100).round(1)
-    advanced_stats['%PTS_3PT'] = (advanced_stats['%PTS_3PT'] * 100).round(1)
-    
-    return advanced_stats
-
-def get_players_for_comparison(df, player_names):
-    """Get data for multiple players for comparison"""
-    comparison_data = {}
-    for player_name in player_names:
-        player_data = df[df['Player'] == player_name]
-        if not player_data.empty:
-            comparison_data[player_name] = player_data.iloc[0]
-    return comparison_data
