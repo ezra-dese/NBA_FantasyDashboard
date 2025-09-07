@@ -217,6 +217,7 @@ def main():
             
             st.subheader(f"📊 {player_search} Analysis")
             
+            # Basic info section
             col1, col2 = st.columns([1, 2])
             
             with col1:
@@ -230,6 +231,45 @@ def main():
                 # Performance radar chart
                 fig = create_player_radar_chart(player_data, player_search, filtered_df)
                 st.plotly_chart(fig, use_container_width=True)
+            
+            # Main stats section
+            st.subheader("📊 Main Statistics")
+            col1, col2, col3, col4 = st.columns(4)
+            
+            with col1:
+                st.metric("Fantasy Points", format_stat(player_summary['fantasy_points']))
+                st.metric("Points", format_stat(player_summary['points']))
+                st.metric("Assists", format_stat(player_summary['assists']))
+            
+            with col2:
+                st.metric("FG%", format_percentage(player_summary['fg_percentage']))
+                st.metric("Steals", format_stat(player_summary['steals']))
+                st.metric("3P%", format_percentage(player_summary['three_p_percentage']))
+            
+            with col3:
+                st.metric("Rebounds", format_stat(player_summary['rebounds']))
+                st.metric("Blocks", format_stat(player_summary['blocks']))
+                st.metric("FT%", format_percentage(player_summary['ft_percentage']))
+            
+            with col4:
+                st.metric("Turnovers", format_stat(player_summary['turnovers']))
+                st.metric("Minutes", format_stat(player_summary['minutes']))
+            
+            # Advanced stats section
+            st.subheader("🔬 Advanced Statistics")
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                st.metric("eFG%", format_percentage(player_summary['efg_percentage']))
+                st.metric("TS%", format_percentage(player_summary['ts_percentage']))
+                st.metric("FTR", format_stat(player_summary['ftr'], 3))
+            
+            with col2:
+                st.metric("AST/TOV Ratio", format_stat(player_summary['ast_tov_ratio'], 2))
+                st.metric("hAST%", format_percentage(player_summary['hast_percentage']))
+            
+            with col3:
+                st.metric("TOV%", format_percentage(player_summary['tov_percentage']))
             
             # Similar players
             st.subheader("🔍 Similar Players")

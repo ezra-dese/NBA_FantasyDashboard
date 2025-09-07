@@ -55,6 +55,13 @@ def get_player_summary(player_data: pd.Series) -> Dict:
         'fg_percentage': player_data['FG%'],
         'three_p_percentage': player_data['3P%'],
         'ft_percentage': player_data['FT%'],
+        'turnovers': player_data['TOV'],
+        'efg_percentage': player_data['eFG%'],
+        'ts_percentage': player_data['TS%'],
+        'ftr': player_data['FTR'],
+        'ast_tov_ratio': player_data['AST_TOV_Ratio'],
+        'hast_percentage': player_data['hAST%'],
+        'tov_percentage': player_data['TOV%'],
         'player_type': player_data['Player_Type'],
         'minutes': player_data['MP']
     }

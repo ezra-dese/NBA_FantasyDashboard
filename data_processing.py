@@ -35,6 +35,25 @@ def load_data():
         df['PER'] = df['PTS'] + df['TRB'] + df['AST'] + df['STL'] + df['BLK'] - df['TOV']
         df['Usage_Rate'] = (df['FGA'] + df['FTA'] * 0.44 + df['AST']) / df['MP'] * 100
         
+        # Calculate advanced metrics
+        # Effective Field Goal Percentage (eFG%) = (FG + .5 * 3P) / FGA
+        df['eFG%'] = (df['FG'] + 0.5 * df['3P']) / df['FGA']
+        
+        # True Shooting Percentage (TS%) = Pts / (2 * (FGA + .475 * FTA))
+        df['TS%'] = df['PTS'] / (2 * (df['FGA'] + 0.475 * df['FTA']))
+        
+        # Free Throw Rate (FTR) = FT / FGA
+        df['FTR'] = df['FT'] / df['FGA']
+        
+        # Assist to Turnover ratio
+        df['AST_TOV_Ratio'] = df['AST'] / df['TOV'].replace(0, 0.1)  # Avoid division by zero
+        
+        # Hollinger Assist Ratio (hAST%) = AST / (FGA + .475 * FTA + AST + TOV)
+        df['hAST%'] = df['AST'] / (df['FGA'] + 0.475 * df['FTA'] + df['AST'] + df['TOV'])
+        
+        # Turnover Percentage (TOV%) = TOV / (FGA + .475*FTA + AST + TOV)
+        df['TOV%'] = df['TOV'] / (df['FGA'] + 0.475 * df['FTA'] + df['AST'] + df['TOV'])
+        
         
         # Create player clusters for similar players
         df = create_player_clusters(df)
