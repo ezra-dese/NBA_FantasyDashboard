@@ -21,10 +21,6 @@ wheels/
 *.egg
 MANIFEST
 
-# Excel temporary files
-~$*.xlsx
-~$*.xls
-
 # Virtual environments
 venv/
 env/

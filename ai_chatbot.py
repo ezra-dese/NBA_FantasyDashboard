@@ -217,17 +217,47 @@ class NBAFantasyChatbot:
         if len(player_data) < 2:
             return "I couldn't find enough players for comparison. Please check the spelling of the player names."
         
-        # Generate comparison
-        response = "**Player Comparison:**\n\n"
-        for player in player_data:
-            response += f"**{player['Player']}** ({player['Team']}):\n"
-            response += f"• Fantasy Points: {player['Fantasy_Points']:.1f}\n"
-            response += f"• Points: {player['PTS']:.1f} | Rebounds: {player['TRB']:.1f} | Assists: {player['AST']:.1f}\n"
-            response += f"• Player Type: {player['Player_Type']}\n\n"
+        # Generate detailed comparison
+        response = "**📊 Detailed Player Comparison:**\n\n"
         
-        # Determine winner
-        best_player = max(player_data, key=lambda x: x['Fantasy_Points'])
-        response += f"🏆 **Fantasy Winner:** {best_player['Player']} with {best_player['Fantasy_Points']:.1f} fantasy points!"
+        # Create comparison table
+        response += "| Player | Team | Pos | Fantasy | PTS | REB | AST | STL | BLK | Type |\n"
+        response += "|--------|------|-----|---------|-----|-----|-----|-----|-----|------|\n"
+        
+        for player in player_data:
+            response += f"| {player['Player']} | {player['Team']} | {player['Pos']} | {player['Fantasy_Points']:.1f} | {player['PTS']:.1f} | {player['TRB']:.1f} | {player['AST']:.1f} | {player['STL']:.1f} | {player['BLK']:.1f} | {player['Player_Type']} |\n"
+        
+        response += "\n**🔍 Advanced Statistics:**\n\n"
+        
+        # Add advanced stats if available
+        for player in player_data:
+            response += f"**{player['Player']}:**\n"
+            if 'AST_TOV_Ratio' in player:
+                response += f"• AST/TOV Ratio: {player['AST_TOV_Ratio']:.2f}\n"
+            if 'TS%' in player:
+                response += f"• True Shooting %: {player['TS%']:.1f}%\n"
+            if 'eFG%' in player:
+                response += f"• Effective FG %: {player['eFG%']:.1f}%\n"
+            response += "\n"
+        
+        # Determine winners by category
+        response += "**🏆 Category Winners:**\n"
+        categories = {
+            'Fantasy Points': 'Fantasy_Points',
+            'Scoring': 'PTS',
+            'Rebounding': 'TRB',
+            'Assists': 'AST',
+            'Steals': 'STL',
+            'Blocks': 'BLK'
+        }
+        
+        for category, stat in categories.items():
+            best_player = max(player_data, key=lambda x: x[stat])
+            response += f"• **{category}:** {best_player['Player']} ({best_player[stat]:.1f})\n"
+        
+        # Overall fantasy winner
+        best_fantasy = max(player_data, key=lambda x: x['Fantasy_Points'])
+        response += f"\n🎯 **Overall Fantasy Winner:** {best_fantasy['Player']} with {best_fantasy['Fantasy_Points']:.1f} fantasy points!"
         
         return response
     

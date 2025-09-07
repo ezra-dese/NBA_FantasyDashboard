@@ -24,7 +24,7 @@ def load_data():
         # Calculate fantasy points (standard scoring)
         df['Fantasy_Points'] = (
             df['PTS'] * 1 +           # Points
-            df['TRB'] * 1.2 +         # Rebounds
+            df['TRB'] * 1.25 +         # Rebounds
             df['AST'] * 1.5 +         # Assists
             df['STL'] * 2 +           # Steals
             df['BLK'] * 2 +           # Blocks
@@ -34,6 +34,9 @@ def load_data():
         # Calculate efficiency metrics
         df['PER'] = df['PTS'] + df['TRB'] + df['AST'] + df['STL'] + df['BLK'] - df['TOV']
         df['Usage_Rate'] = (df['FGA'] + df['FTA'] * 0.44 + df['AST']) / df['MP'] * 100
+        
+        # Calculate advanced statistics
+        df = calculate_advanced_stats(df)
         
         
         # Create player clusters for similar players
@@ -88,27 +91,104 @@ def handle_duplicate_players(df):
     
     return processed_df
 
+def calculate_advanced_stats(df):
+    """Calculate advanced basketball statistics"""
+    # Assist to turnover ratio
+    df['AST_TOV_Ratio'] = df['AST'] / df['TOV'].replace(0, 0.1)  # Avoid division by zero
+    
+    # True shooting percentage: PTS / (2 * (FGA + .475 * FTA))
+    df['TS%'] = df['PTS'] / (2 * (df['FGA'] + 0.475 * df['FTA']))
+    
+    # Effective field goal percentage: (FG + .5 * 3P) / FGA
+    df['eFG%'] = (df['FG'] + 0.5 * df['3P']) / df['FGA']
+    
+    # Free throw rate: FTA / FGA
+    df['FTR'] = df['FTA'] / df['FGA'].replace(0, 0.1)  # Avoid division by zero
+    
+    # Hollinger Assist Ratio (hAST%) = AST / (FGA + .475 * FTA + AST + TOV)
+    df['hAST%'] = df['AST'] / (df['FGA'] + 0.475 * df['FTA'] + df['AST'] + df['TOV'])
+    
+    # Turnover Percentage (TOV%) = TOV / (FGA + .475*FTA + AST + TOV)
+    df['TOV%'] = df['TOV'] / (df['FGA'] + 0.475 * df['FTA'] + df['AST'] + df['TOV'])
+    
+    # %PTS 3PT: Percent of Points that are three points
+    df['%PTS_3PT'] = (df['3P'] * 3) / df['PTS'].replace(0, 0.1)  # Avoid division by zero
+    
+    return df
 
 def create_player_clusters(df):
-    """Create player clusters for similar players using K-means"""
-    features_for_clustering = ['PTS', 'TRB', 'AST', 'STL', 'BLK', 'FG%', '3P%', 'FT%']
-    clustering_data = df[features_for_clustering].fillna(0)
+    """Create player types using rule-based classification for each position"""
+    df['Player_Type'] = 'Other'  # Default type
     
-    scaler = StandardScaler()
-    scaled_data = scaler.fit_transform(clustering_data)
+    # Point Guards (PG) - Rule-based classification
+    pg_mask = df['Pos'] == 'PG'
+    if pg_mask.sum() > 0:
+        pg_data = df[pg_mask].copy()
+        
+        # Apply rules with priority order
+        playmaking_pg = (pg_data['AST'] > 5)
+        defensive_pg = (pg_data['STL'] > 1) & (~playmaking_pg)  # Only if not already playmaking
+        scoring_pg = ~(playmaking_pg | defensive_pg)  # Everyone else
+        
+        df.loc[pg_mask & playmaking_pg, 'Player_Type'] = 'Playmaking Guard'
+        df.loc[pg_mask & defensive_pg, 'Player_Type'] = 'Defensive Guard'
+        df.loc[pg_mask & scoring_pg, 'Player_Type'] = 'Scoring Guard'
     
-    kmeans = KMeans(n_clusters=5, random_state=42, n_init=10)
-    df['Player_Type'] = kmeans.fit_predict(scaled_data)
+    # Shooting Guards (SG) - Rule-based classification
+    sg_mask = df['Pos'] == 'SG'
+    if sg_mask.sum() > 0:
+        sg_data = df[sg_mask].copy()
+        
+        # Apply rules with priority order
+        playmaking_sg = (sg_data['AST'] > 5)
+        defensive_sg = (sg_data['STL'] > 1) & (~playmaking_sg)  # Only if not already playmaking
+        scoring_sg = ~(playmaking_sg | defensive_sg)  # Everyone else
+        
+        df.loc[sg_mask & playmaking_sg, 'Player_Type'] = 'Playmaking Guard'
+        df.loc[sg_mask & defensive_sg, 'Player_Type'] = 'Defensive Guard'
+        df.loc[sg_mask & scoring_sg, 'Player_Type'] = 'Scoring Guard'
     
-    # Map cluster numbers to player types
-    cluster_mapping = {
-        0: 'Scoring Guard',
-        1: 'All-Around Forward',
-        2: 'Defensive Specialist',
-        3: 'Playmaking Guard',
-        4: 'Big Man'
-    }
-    df['Player_Type'] = df['Player_Type'].map(cluster_mapping)
+    # Small Forwards (SF) - Rule-based classification
+    sf_mask = df['Pos'] == 'SF'
+    if sf_mask.sum() > 0:
+        sf_data = df[sf_mask].copy()
+        
+        # Apply rules with priority order
+        wing_defender = (sf_data['STL'] > 1)
+        wing_scorer = (sf_data['PTS'] > 10) & (~wing_defender)  # Only if not already defender
+        three_d_player = ~(wing_defender | wing_scorer)  # Everyone else
+        
+        df.loc[sf_mask & wing_defender, 'Player_Type'] = 'Wing Defender'
+        df.loc[sf_mask & wing_scorer, 'Player_Type'] = 'Wing Scorer'
+        df.loc[sf_mask & three_d_player, 'Player_Type'] = '3&D Player'
+    
+    # Power Forwards (PF) - Rule-based classification
+    pf_mask = df['Pos'] == 'PF'
+    if pf_mask.sum() > 0:
+        pf_data = df[pf_mask].copy()
+        
+        # Apply rules with priority order
+        playmaking_big = (pf_data['AST'] > 3)
+        rim_protector = (pf_data['BLK'] > 1) & (~playmaking_big)  # Only if not already playmaking
+        glass_cleaner = ~(playmaking_big | rim_protector)  # Everyone else
+        
+        df.loc[pf_mask & playmaking_big, 'Player_Type'] = 'Playmaking Big'
+        df.loc[pf_mask & rim_protector, 'Player_Type'] = 'Rim Protector'
+        df.loc[pf_mask & glass_cleaner, 'Player_Type'] = 'Glass Cleaner'
+    
+    # Centers (C) - Rule-based classification
+    c_mask = df['Pos'] == 'C'
+    if c_mask.sum() > 0:
+        c_data = df[c_mask].copy()
+        
+        # Apply rules with priority order
+        playmaking_big = (c_data['AST'] > 3)
+        rim_protector = (c_data['BLK'] > 1) & (~playmaking_big)  # Only if not already playmaking
+        glass_cleaner = ~(playmaking_big | rim_protector)  # Everyone else
+        
+        df.loc[c_mask & playmaking_big, 'Player_Type'] = 'Playmaking Big'
+        df.loc[c_mask & rim_protector, 'Player_Type'] = 'Rim Protector'
+        df.loc[c_mask & glass_cleaner, 'Player_Type'] = 'Glass Cleaner'
     
     return df
 
@@ -180,3 +260,29 @@ def get_position_stats(df):
     }).round(1)
     
     return position_stats
+
+def get_advanced_stats(df):
+    """Get advanced statistics for display"""
+    advanced_stats = df[['Player', 'Team', 'Pos', 'Player_Type', 
+                        'AST_TOV_Ratio', 'TS%', 'eFG%', 'FTR', 
+                        'hAST%', 'TOV%', '%PTS_3PT']].copy()
+    
+    # Round the advanced stats to appropriate decimal places
+    advanced_stats['AST_TOV_Ratio'] = advanced_stats['AST_TOV_Ratio'].round(2)
+    advanced_stats['TS%'] = (advanced_stats['TS%'] * 100).round(1)
+    advanced_stats['eFG%'] = (advanced_stats['eFG%'] * 100).round(1)
+    advanced_stats['FTR'] = advanced_stats['FTR'].round(2)
+    advanced_stats['hAST%'] = (advanced_stats['hAST%'] * 100).round(1)
+    advanced_stats['TOV%'] = (advanced_stats['TOV%'] * 100).round(1)
+    advanced_stats['%PTS_3PT'] = (advanced_stats['%PTS_3PT'] * 100).round(1)
+    
+    return advanced_stats
+
+def get_players_for_comparison(df, player_names):
+    """Get data for multiple players for comparison"""
+    comparison_data = {}
+    for player_name in player_names:
+        player_data = df[df['Player'] == player_name]
+        if not player_data.empty:
+            comparison_data[player_name] = player_data.iloc[0]
+    return comparison_data

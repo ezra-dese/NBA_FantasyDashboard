@@ -49,11 +49,18 @@ def create_fantasy_vs_efficiency_scatter(df, top_n=50):
 
 def create_player_radar_chart(player_data, player_name, df):
     """Create performance radar chart for individual player"""
-    categories = ['PTS', 'TRB', 'AST', 'STL', 'BLK', 'FG%', '3P%', 'FT%']
-    values = [player_data[cat] for cat in categories]
+    categories = ['PTS', 'TRB', 'AST', 'STL', 'BLK', 'FG%', '3P%', 'Efficiency']
+    
+    # Calculate efficiency (PER)
+    efficiency = player_data['PTS'] + player_data['TRB'] + player_data['AST'] + player_data['STL'] + player_data['BLK'] - player_data['TOV']
+    
+    values = [player_data[cat] for cat in categories[:-1]] + [efficiency]
     
     # Normalize values for radar chart
-    max_values = df[categories].max()
+    max_values = df[categories[:-1]].max()
+    max_efficiency = df['PTS'] + df['TRB'] + df['AST'] + df['STL'] + df['BLK'] - df['TOV']
+    max_values = max_values.tolist() + [max_efficiency.max()]
+    
     normalized_values = [val / max_val * 100 for val, max_val in zip(values, max_values)]
     
     fig = go.Figure()
@@ -170,5 +177,93 @@ def create_trend_analysis_chart(df, metric='Fantasy_Points', group_by='Pos'):
                                 labels=['21-22', '23-25', '26-28', '29-31', '32+'])
         trend_data = df.groupby('Age_Group')[metric].mean().reset_index()
         fig = px.bar(trend_data, x='Age_Group', y=metric, title=f"Average {metric} by Age Group")
+    
+    return fig
+
+def create_advanced_stats_chart(advanced_stats, top_n=20):
+    """Create advanced statistics comparison chart"""
+    # Get top players by fantasy points for advanced stats
+    top_players = advanced_stats.nlargest(top_n, 'Fantasy_Points')
+    
+    # Create subplots for different advanced stats
+    fig = make_subplots(
+        rows=2, cols=2,
+        subplot_titles=('True Shooting %', 'Assist/Turnover Ratio', 
+                       'Effective FG%', 'Hollinger Assist %'),
+        specs=[[{"secondary_y": False}, {"secondary_y": False}],
+               [{"secondary_y": False}, {"secondary_y": False}]]
+    )
+    
+    # True Shooting %
+    fig.add_trace(
+        go.Bar(x=top_players['Player'], y=top_players['TS%'], 
+               name='TS%', marker_color='#1f77b4'),
+        row=1, col=1
+    )
+    
+    # Assist/Turnover Ratio
+    fig.add_trace(
+        go.Bar(x=top_players['Player'], y=top_players['AST_TOV_Ratio'], 
+               name='AST/TOV', marker_color='#ff7f0e'),
+        row=1, col=2
+    )
+    
+    # Effective FG%
+    fig.add_trace(
+        go.Bar(x=top_players['Player'], y=top_players['eFG%'], 
+               name='eFG%', marker_color='#2ca02c'),
+        row=2, col=1
+    )
+    
+    # Hollinger Assist %
+    fig.add_trace(
+        go.Bar(x=top_players['Player'], y=top_players['hAST%'], 
+               name='hAST%', marker_color='#d62728'),
+        row=2, col=2
+    )
+    
+    fig.update_layout(
+        title=f"Advanced Statistics - Top {top_n} Players",
+        showlegend=False,
+        height=600
+    )
+    
+    return fig
+
+def create_multi_player_comparison_chart(players_data):
+    """Create comparison chart for multiple players"""
+    if len(players_data) < 2:
+        return None
+    
+    # Define categories for comparison
+    categories = ['PTS', 'TRB', 'AST', 'STL', 'BLK', 'FG%', '3P%', 'FT%']
+    
+    fig = go.Figure()
+    
+    for player_name, player_data in players_data.items():
+        values = [player_data[cat] for cat in categories]
+        
+        # Normalize values for better comparison
+        max_values = [max([p[cat] for p in players_data.values()]) for cat in categories]
+        normalized_values = [val / max_val * 100 for val, max_val in zip(values, max_values)]
+        
+        fig.add_trace(go.Scatterpolar(
+            r=normalized_values,
+            theta=categories,
+            fill='toself',
+            name=player_name,
+            line=dict(width=2)
+        ))
+    
+    fig.update_layout(
+        polar=dict(
+            radialaxis=dict(
+                visible=True,
+                range=[0, 100]
+            )),
+        showlegend=True,
+        title="Multi-Player Comparison",
+        height=500
+    )
     
     return fig
