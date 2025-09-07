@@ -85,6 +85,97 @@ def create_player_radar_chart(player_data, player_name, df):
     
     return fig
 
+def create_multi_player_radar_chart(players_data, player_names, df):
+    """Create performance radar chart for multiple players comparison"""
+    categories = ['PTS', 'TRB', 'AST', 'STL', 'BLK', 'FG%', '3P%', 'Efficiency']
+    
+    # Calculate efficiency (PER) for all players
+    efficiency_values = []
+    for player_data in players_data:
+        efficiency = player_data['PTS'] + player_data['TRB'] + player_data['AST'] + player_data['STL'] + player_data['BLK'] - player_data['TOV']
+        efficiency_values.append(efficiency)
+    
+    # Normalize values for radar chart
+    max_values = df[categories[:-1]].max()
+    max_efficiency = df['PTS'] + df['TRB'] + df['AST'] + df['STL'] + df['BLK'] - df['TOV']
+    max_values = max_values.tolist() + [max_efficiency.max()]
+    
+    fig = go.Figure()
+    
+    # Define colors for different players
+    colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']
+    
+    for i, (player_data, player_name) in enumerate(zip(players_data, player_names)):
+        values = [player_data[cat] for cat in categories[:-1]] + [efficiency_values[i]]
+        normalized_values = [val / max_val * 100 for val, max_val in zip(values, max_values)]
+        
+        fig.add_trace(go.Scatterpolar(
+            r=normalized_values,
+            theta=categories,
+            fill='toself' if i == 0 else 'none',
+            name=player_name,
+            line_color=colors[i % len(colors)],
+            line_width=3
+        ))
+    
+    fig.update_layout(
+        polar=dict(
+            radialaxis=dict(
+                visible=True,
+                range=[0, 100]
+            )),
+        showlegend=True,
+        title="Player Comparison Radar Chart",
+        height=600
+    )
+    
+    return fig
+
+def create_advanced_stats_comparison_chart(players_data, player_names, stats):
+    """Create comparison chart for advanced statistics"""
+    fig = go.Figure()
+    
+    colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']
+    
+    for i, (player_data, player_name) in enumerate(zip(players_data, player_names)):
+        values = [player_data[stat] for stat in stats]
+        
+        fig.add_trace(go.Bar(
+            name=player_name,
+            x=stats,
+            y=values,
+            marker_color=colors[i % len(colors)],
+            opacity=0.8
+        ))
+    
+    fig.update_layout(
+        title="Advanced Statistics Comparison",
+        xaxis_title="Statistics",
+        yaxis_title="Value",
+        barmode='group',
+        height=500
+    )
+    
+    return fig
+
+def create_advanced_stats_distribution_chart(df, stat_name):
+    """Create distribution chart for advanced statistics"""
+    fig = px.histogram(df, x=stat_name, 
+                      title=f"{stat_name} Distribution",
+                      nbins=30, color_discrete_sequence=['#1f77b4'])
+    fig.update_layout(showlegend=False)
+    return fig
+
+def create_advanced_stats_scatter(df, x_stat, y_stat):
+    """Create scatter plot for advanced statistics"""
+    fig = px.scatter(df, 
+                    x=x_stat, 
+                    y=y_stat,
+                    color='Player_Type',
+                    hover_data=['Player', 'Team', 'Pos'],
+                    title=f"{x_stat} vs {y_stat}")
+    return fig
+
 def create_correlation_heatmap(df):
     """Create correlation heatmap for statistical analysis"""
     numeric_cols = ['PTS', 'TRB', 'AST', 'STL', 'BLK', 'FG%', '3P%', 'FT%', 'Fantasy_Points']

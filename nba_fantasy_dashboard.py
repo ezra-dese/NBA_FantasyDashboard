@@ -12,7 +12,9 @@ from visualizations import (
     create_player_type_pie_chart, create_fantasy_vs_efficiency_scatter,
     create_player_radar_chart, create_correlation_heatmap,
     create_position_analysis_chart, create_team_analysis_chart,
-    create_metric_cards_data
+    create_metric_cards_data, create_multi_player_radar_chart,
+    create_advanced_stats_comparison_chart, create_advanced_stats_distribution_chart,
+    create_advanced_stats_scatter
 )
 from utils import (
     get_filter_options, validate_filters, get_player_summary,
@@ -107,7 +109,7 @@ def main():
     filtered_df = apply_filters(df, selected_pos, selected_team, age_range, min_games)
     
     # Main content tabs
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["📊 Overview", "🎯 Top Picks", "📈 Player Analysis", "🔍 Advanced Stats", "🤖 AI Assistant", "👨‍💻 About the Author"])
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(["📊 Overview", "🎯 Top Picks", "📈 Player Analysis", "⚖️ Player Comparison", "🔍 Advanced Stats", "🤖 AI Assistant", "👨‍💻 About the Author"])
     
     with tab1:
         st.header("📊 League Overview")
@@ -279,24 +281,206 @@ def main():
                 st.write(f"• **{similar['Player']}** ({similar['Team']}) - {format_stat(similar['Fantasy_Points'])} fantasy points")
     
     with tab4:
+        st.header("⚖️ Player Comparison")
+        
+        # Player selection for comparison
+        st.subheader("Select Players to Compare (Up to 5)")
+        
+        # Get list of players for selection
+        player_list = sorted(filtered_df['Player'].unique().tolist())
+        
+        # Create columns for player selection
+        col1, col2, col3, col4, col5 = st.columns(5)
+        
+        selected_players = []
+        with col1:
+            player1 = st.selectbox("Player 1", [''] + player_list, key="player1")
+            if player1:
+                selected_players.append(player1)
+        
+        with col2:
+            player2 = st.selectbox("Player 2", [''] + player_list, key="player2")
+            if player2:
+                selected_players.append(player2)
+        
+        with col3:
+            player3 = st.selectbox("Player 3", [''] + player_list, key="player3")
+            if player3:
+                selected_players.append(player3)
+        
+        with col4:
+            player4 = st.selectbox("Player 4", [''] + player_list, key="player4")
+            if player4:
+                selected_players.append(player4)
+        
+        with col5:
+            player5 = st.selectbox("Player 5", [''] + player_list, key="player5")
+            if player5:
+                selected_players.append(player5)
+        
+        if len(selected_players) >= 2:
+            # Get player data
+            players_data = []
+            player_names = []
+            
+            for player_name in selected_players:
+                player_data = filtered_df[filtered_df['Player'] == player_name].iloc[0]
+                players_data.append(player_data)
+                player_names.append(player_name)
+            
+            # Display comparison
+            st.subheader("📊 Player Comparison")
+            
+            # Radar chart comparison
+            fig_radar = create_multi_player_radar_chart(players_data, player_names, filtered_df)
+            st.plotly_chart(fig_radar, use_container_width=True)
+            
+            # Advanced stats comparison
+            st.subheader("🔬 Advanced Statistics Comparison")
+            advanced_stats = ['eFG%', 'TS%', 'FTR', 'AST_TOV_Ratio', 'hAST%', 'TOV%']
+            fig_advanced = create_advanced_stats_comparison_chart(players_data, player_names, advanced_stats)
+            st.plotly_chart(fig_advanced, use_container_width=True)
+            
+            # Detailed comparison table
+            st.subheader("📋 Detailed Comparison")
+            
+            comparison_data = []
+            for i, (player_data, player_name) in enumerate(zip(players_data, player_names)):
+                player_summary = get_player_summary(player_data)
+                comparison_data.append({
+                    'Player': player_name,
+                    'Team': player_summary['team'],
+                    'Position': player_summary['position'],
+                    'Fantasy Points': format_stat(player_summary['fantasy_points']),
+                    'Points': format_stat(player_summary['points']),
+                    'Rebounds': format_stat(player_summary['rebounds']),
+                    'Assists': format_stat(player_summary['assists']),
+                    'Steals': format_stat(player_summary['steals']),
+                    'Blocks': format_stat(player_summary['blocks']),
+                    'FG%': format_percentage(player_summary['fg_percentage']),
+                    '3P%': format_percentage(player_summary['three_p_percentage']),
+                    'FT%': format_percentage(player_summary['ft_percentage']),
+                    'eFG%': format_percentage(player_summary['efg_percentage']),
+                    'TS%': format_percentage(player_summary['ts_percentage']),
+                    'AST/TOV': format_stat(player_summary['ast_tov_ratio'], 2),
+                    'hAST%': format_percentage(player_summary['hast_percentage']),
+                    'TOV%': format_percentage(player_summary['tov_percentage'])
+                })
+            
+            comparison_df = pd.DataFrame(comparison_data)
+            st.dataframe(comparison_df, use_container_width=True)
+            
+        else:
+            st.info("Please select at least 2 players to compare.")
+    
+    with tab5:
         st.header("🔍 Advanced Statistics")
         
-        # Statistical analysis
-        col1, col2 = st.columns(2)
+        # Advanced Statistics Explanation
+        st.subheader("📚 Advanced Statistics Explained")
         
-        with col1:
+        with st.expander("📖 What are Advanced Statistics?", expanded=False):
+            st.markdown("""
+            **Advanced statistics** provide deeper insights into player performance beyond traditional box score stats. 
+            They help evaluate efficiency, usage, and overall impact on the game.
+            
+            ### 🎯 **Key Advanced Metrics:**
+            
+            **📊 Effective Field Goal Percentage (eFG%)**
+            - **Formula:** (FG + 0.5 × 3P) / FGA
+            - **What it measures:** Shooting efficiency accounting for the extra value of 3-pointers
+            - **Why it matters:** A 40% 3-point shooter is as efficient as a 60% 2-point shooter
+            
+            **🎯 True Shooting Percentage (TS%)**
+            - **Formula:** PTS / (2 × (FGA + 0.475 × FTA))
+            - **What it measures:** Overall scoring efficiency including free throws
+            - **Why it matters:** Shows how efficiently a player scores considering all shot types
+            
+            **🏀 Free Throw Rate (FTR)**
+            - **Formula:** FT / FGA
+            - **What it measures:** How often a player gets to the free throw line relative to field goal attempts
+            - **Why it matters:** Indicates aggressiveness and ability to draw fouls
+            
+            **⚖️ Assist to Turnover Ratio (AST/TOV)**
+            - **Formula:** AST / TOV
+            - **What it measures:** Ball security and playmaking efficiency
+            - **Why it matters:** Higher ratios indicate better decision-making and ball control
+            
+            **🎮 Hollinger Assist Ratio (hAST%)**
+            - **Formula:** AST / (FGA + 0.475 × FTA + AST + TOV)
+            - **What it measures:** Percentage of possessions that end in an assist
+            - **Why it matters:** Shows how often a player creates scoring opportunities for teammates
+            
+            **🔄 Turnover Percentage (TOV%)**
+            - **Formula:** TOV / (FGA + 0.475 × FTA + AST + TOV)
+            - **What it measures:** Percentage of possessions that end in a turnover
+            - **Why it matters:** Lower percentages indicate better ball security and decision-making
+            """)
+        
+        # Advanced Statistics Charts
+        st.subheader("📈 Advanced Statistics Analysis")
+        
+        # Chart selection
+        chart_type = st.selectbox("Select Chart Type", [
+            "Distribution Analysis",
+            "Scatter Plot Analysis", 
+            "Position Analysis",
+            "Team Analysis"
+        ])
+        
+        if chart_type == "Distribution Analysis":
+            st.subheader("📊 Distribution of Advanced Statistics")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                stat_choice1 = st.selectbox("Select Statistic 1", 
+                    ['eFG%', 'TS%', 'FTR', 'AST_TOV_Ratio', 'hAST%', 'TOV%'], key="dist1")
+                if stat_choice1:
+                    fig1 = create_advanced_stats_distribution_chart(filtered_df, stat_choice1)
+                    st.plotly_chart(fig1, use_container_width=True)
+            
+            with col2:
+                stat_choice2 = st.selectbox("Select Statistic 2", 
+                    ['eFG%', 'TS%', 'FTR', 'AST_TOV_Ratio', 'hAST%', 'TOV%'], key="dist2")
+                if stat_choice2 and stat_choice2 != stat_choice1:
+                    fig2 = create_advanced_stats_distribution_chart(filtered_df, stat_choice2)
+                    st.plotly_chart(fig2, use_container_width=True)
+        
+        elif chart_type == "Scatter Plot Analysis":
+            st.subheader("🔍 Advanced Statistics Correlations")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                x_stat = st.selectbox("X-Axis Statistic", 
+                    ['eFG%', 'TS%', 'FTR', 'AST_TOV_Ratio', 'hAST%', 'TOV%'], key="scatter_x")
+            
+            with col2:
+                y_stat = st.selectbox("Y-Axis Statistic", 
+                    ['eFG%', 'TS%', 'FTR', 'AST_TOV_Ratio', 'hAST%', 'TOV%'], key="scatter_y")
+            
+            if x_stat and y_stat and x_stat != y_stat:
+                fig = create_advanced_stats_scatter(filtered_df, x_stat, y_stat)
+                st.plotly_chart(fig, use_container_width=True)
+        
+        elif chart_type == "Position Analysis":
+            st.subheader("🏀 Position-Based Advanced Statistics")
+            
             # Position analysis
             position_stats = get_position_stats(filtered_df)
             fig = create_position_analysis_chart(position_stats)
             st.plotly_chart(fig, use_container_width=True)
         
-        with col2:
-            # Team analysis - Average fantasy points only
+        elif chart_type == "Team Analysis":
+            st.subheader("🏆 Team Advanced Statistics")
+            
+            # Team analysis
             team_stats = get_team_stats(filtered_df)
             fig = create_team_analysis_chart(team_stats, 'avg', 15)
             st.plotly_chart(fig, use_container_width=True)
     
-    with tab5:
+    with tab6:
         st.header("🤖 AI Assistant")
         st.write("Ask me anything about NBA players, stats, or fantasy recommendations!")
         
@@ -334,7 +518,7 @@ def main():
                     response = st.session_state.chatbot.process_query(query)
                 st.markdown(response)
     
-    with tab6:
+    with tab7:
         st.header("👨‍💻 About the Author")
         
         # Author information
