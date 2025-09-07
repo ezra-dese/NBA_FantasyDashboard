@@ -564,6 +564,7 @@ def main():
                     <h4>💼 LinkedIn</h4>
                     <p><strong>Ezra Dese</strong></p>
                     <p>Connect with me for professional networking and data science discussions!</p>
+                    <a href="https://www.linkedin.com/in/ezra-dese/" target="_blank" style="color: #0077b5; text-decoration: none; font-weight: bold;">🔗 Connect on LinkedIn</a>
                 </div>
                 """, unsafe_allow_html=True)
             
@@ -573,6 +574,7 @@ def main():
                     <h4>🐙 GitHub</h4>
                     <p><strong>ezra-dese</strong></p>
                     <p>Check out my other projects and contribute to open source!</p>
+                    <a href="https://github.com/ezra-dese" target="_blank" style="color: #333; text-decoration: none; font-weight: bold;">🔗 View GitHub Profile</a>
                 </div>
                 """, unsafe_allow_html=True)
         

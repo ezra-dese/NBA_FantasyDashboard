@@ -63,11 +63,15 @@ def create_player_radar_chart(player_data, player_name, df):
     
     normalized_values = [val / max_val * 100 for val, max_val in zip(values, max_values)]
     
+    # Close the line by adding the first point at the end
+    closed_values = normalized_values + [normalized_values[0]]
+    closed_categories = categories + [categories[0]]
+    
     fig = go.Figure()
     
     fig.add_trace(go.Scatterpolar(
-        r=normalized_values,
-        theta=categories,
+        r=closed_values,
+        theta=closed_categories,
         fill='toself',
         name=player_name,
         line_color='#1f77b4'
@@ -109,9 +113,13 @@ def create_multi_player_radar_chart(players_data, player_names, df):
         values = [player_data[cat] for cat in categories[:-1]] + [efficiency_values[i]]
         normalized_values = [val / max_val * 100 for val, max_val in zip(values, max_values)]
         
+        # Close the line by adding the first point at the end
+        closed_values = normalized_values + [normalized_values[0]]
+        closed_categories = categories + [categories[0]]
+        
         fig.add_trace(go.Scatterpolar(
-            r=normalized_values,
-            theta=categories,
+            r=closed_values,
+            theta=closed_categories,
             fill='toself' if i == 0 else 'none',
             name=player_name,
             line_color=colors[i % len(colors)],
