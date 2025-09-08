@@ -614,9 +614,8 @@ def main():
         - 🏀 **Favorite NBA Team**: SACTOWN BABYYYYY!
         - 📊 **Data Points Analyzed**: Over 15,000 individual player statistics
         - 🤖 **AI Responses**: The chatbot can answer 50+ different types of queries
-        - ⚡ **Performance**: Dashboard loads in under 3 seconds
-        - 🎨 **Design**: Custom CSS for that professional look
-        - 🚀 **Deployment**: Automatically updates when I push code to GitHub
+        - 💻 **Built With**: Python, Streamlit, Plotly, Pandas, Scikit-learn, Excel
+        - 📈 **Guranteed to Dominate**: NBA Fantasy 100% of the time
         """)
         
         # Call to action
