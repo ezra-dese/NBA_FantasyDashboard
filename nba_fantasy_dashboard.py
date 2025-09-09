@@ -60,7 +60,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 @st.cache_data(ttl=300)  # Cache for 5 minutes to allow for updates
-def get_cached_data():
+def get_cached_data(cache_key="v2"):
     """Get cached data using the data processing module"""
     return load_data()
 
@@ -317,8 +317,12 @@ def main():
             
             with col3:
                 st.metric("TOV%", format_percentage(player_summary['tov_percentage']))
-                st.metric("Game Score", format_stat(player_summary['game_score']))
-                st.metric("BPM", format_stat(player_summary['bpm']))
+                try:
+                    st.metric("Game Score", format_stat(player_summary['game_score']))
+                    st.metric("BPM", format_stat(player_summary['bpm']))
+                except KeyError as e:
+                    st.error(f"Error loading advanced stats: {e}")
+                    st.info("Please refresh the page to load the latest data.")
             
             # Similar players
             st.subheader("🔍 Similar Players")
