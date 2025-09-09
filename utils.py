@@ -84,13 +84,24 @@ def format_stat(value: float, decimals: int = 1) -> str:
 
 def get_filter_options(df: pd.DataFrame) -> Dict[str, List]:
     """Get available filter options from the dataset"""
-    return {
-        'positions': ['All'] + sorted(df['Pos'].unique().tolist()),
-        'teams': ['All'] + sorted(df['Team'].unique().tolist()),
-        'age_range': (int(df['Age'].min()), int(df['Age'].max())),
-        'games_range': (1, int(df['G'].max())),
-        'ppg_range': (0.0, float(df['PTS'].max()))
-    }
+    try:
+        return {
+            'positions': ['All'] + sorted(df['Pos'].unique().tolist()),
+            'teams': ['All'] + sorted(df['Team'].unique().tolist()),
+            'age_range': (int(df['Age'].min()), int(df['Age'].max())),
+            'games_range': (1, int(df['G'].max())),
+            'ppg_range': (0.0, float(df['PTS'].max()))
+        }
+    except Exception as e:
+        # Fallback if there are issues with the data
+        print(f"Error in get_filter_options: {e}")
+        return {
+            'positions': ['All'],
+            'teams': ['All'],
+            'age_range': (19, 40),
+            'games_range': (1, 82),
+            'ppg_range': (0.0, 50.0)
+        }
 
 def validate_filters(position: str, team: str, age_range: Tuple[int, int], min_games: int, ppg_range: Tuple[float, float]) -> bool:
     """Validate filter inputs"""

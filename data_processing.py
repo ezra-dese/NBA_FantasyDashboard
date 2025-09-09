@@ -105,20 +105,8 @@ def handle_duplicate_players(df):
             processed_df = processed_df[~((processed_df['Player'] == player) & 
                                         (~processed_df['Team'].str.contains('TM', na=False)))]
         else:
-            # If no 2TM/3TM row, keep the row with highest fantasy points
-            # Calculate fantasy points for comparison
-            player_rows_copy = player_rows.copy()
-            player_rows_copy['temp_fantasy'] = (
-                player_rows_copy['PTS'] * 1 + 
-                player_rows_copy['TRB'] * 1.2 + 
-                player_rows_copy['AST'] * 1.5 + 
-                player_rows_copy['STL'] * 2 + 
-                player_rows_copy['BLK'] * 2 - 
-                player_rows_copy['TOV']
-            )
-            
-            # Keep the row with highest fantasy points
-            best_row = player_rows_copy.loc[player_rows_copy['temp_fantasy'].idxmax()]
+            # If no 2TM/3TM row, keep the row with highest points (simpler approach)
+            best_row = player_rows.loc[player_rows['PTS'].idxmax()]
             processed_df = processed_df[~((processed_df['Player'] == player) & 
                                         (processed_df.index != best_row.name))]
     
@@ -129,75 +117,12 @@ def create_player_clusters(df):
     """Create player types using rule-based classification for each position"""
     df['Player_Type'] = 'Other'  # Default type
     
-    # Point Guards (PG) - Rule-based classification
-    pg_mask = df['Pos'] == 'PG'
-    if pg_mask.sum() > 0:
-        pg_data = df[pg_mask].copy()
-        
-        # Apply rules with priority order
-        playmaking_pg = (pg_data['AST'] > 5)
-        defensive_pg = (pg_data['STL'] > 1) & (~playmaking_pg)  # Only if not already playmaking
-        scoring_pg = ~(playmaking_pg | defensive_pg)  # Everyone else
-        
-        df.loc[pg_mask & playmaking_pg, 'Player_Type'] = 'Playmaking Guard'
-        df.loc[pg_mask & defensive_pg, 'Player_Type'] = 'Defensive Guard'
-        df.loc[pg_mask & scoring_pg, 'Player_Type'] = 'Scoring Guard'
-    
-    # Shooting Guards (SG) - Rule-based classification
-    sg_mask = df['Pos'] == 'SG'
-    if sg_mask.sum() > 0:
-        sg_data = df[sg_mask].copy()
-        
-        # Apply rules with priority order
-        playmaking_sg = (sg_data['AST'] > 5)
-        defensive_sg = (sg_data['STL'] > 1) & (~playmaking_sg)  # Only if not already playmaking
-        scoring_sg = ~(playmaking_sg | defensive_sg)  # Everyone else
-        
-        df.loc[sg_mask & playmaking_sg, 'Player_Type'] = 'Playmaking Guard'
-        df.loc[sg_mask & defensive_sg, 'Player_Type'] = 'Defensive Guard'
-        df.loc[sg_mask & scoring_sg, 'Player_Type'] = 'Scoring Guard'
-    
-    # Small Forwards (SF) - Rule-based classification
-    sf_mask = df['Pos'] == 'SF'
-    if sf_mask.sum() > 0:
-        sf_data = df[sf_mask].copy()
-        
-        # Apply rules with priority order
-        wing_defender = (sf_data['STL'] > 1)
-        wing_scorer = (sf_data['PTS'] > 10) & (~wing_defender)  # Only if not already defender
-        three_d_player = ~(wing_defender | wing_scorer)  # Everyone else
-        
-        df.loc[sf_mask & wing_defender, 'Player_Type'] = 'Wing Defender'
-        df.loc[sf_mask & wing_scorer, 'Player_Type'] = 'Wing Scorer'
-        df.loc[sf_mask & three_d_player, 'Player_Type'] = '3&D Player'
-    
-    # Power Forwards (PF) - Rule-based classification
-    pf_mask = df['Pos'] == 'PF'
-    if pf_mask.sum() > 0:
-        pf_data = df[pf_mask].copy()
-        
-        # Apply rules with priority order
-        playmaking_big = (pf_data['AST'] > 3)
-        rim_protector = (pf_data['BLK'] > 1) & (~playmaking_big)  # Only if not already playmaking
-        glass_cleaner = ~(playmaking_big | rim_protector)  # Everyone else
-        
-        df.loc[pf_mask & playmaking_big, 'Player_Type'] = 'Playmaking Big'
-        df.loc[pf_mask & rim_protector, 'Player_Type'] = 'Rim Protector'
-        df.loc[pf_mask & glass_cleaner, 'Player_Type'] = 'Glass Cleaner'
-    
-    # Centers (C) - Rule-based classification
-    c_mask = df['Pos'] == 'C'
-    if c_mask.sum() > 0:
-        c_data = df[c_mask].copy()
-        
-        # Apply rules with priority order
-        playmaking_big = (c_data['AST'] > 3)
-        rim_protector = (c_data['BLK'] > 1) & (~playmaking_big)  # Only if not already playmaking
-        glass_cleaner = ~(playmaking_big | rim_protector)  # Everyone else
-        
-        df.loc[c_mask & playmaking_big, 'Player_Type'] = 'Playmaking Big'
-        df.loc[c_mask & rim_protector, 'Player_Type'] = 'Rim Protector'
-        df.loc[c_mask & glass_cleaner, 'Player_Type'] = 'Glass Cleaner'
+    # Simple classification based on position
+    df.loc[df['Pos'] == 'PG', 'Player_Type'] = 'Point Guard'
+    df.loc[df['Pos'] == 'SG', 'Player_Type'] = 'Shooting Guard'
+    df.loc[df['Pos'] == 'SF', 'Player_Type'] = 'Small Forward'
+    df.loc[df['Pos'] == 'PF', 'Player_Type'] = 'Power Forward'
+    df.loc[df['Pos'] == 'C', 'Player_Type'] = 'Center'
     
     return df
 

@@ -77,7 +77,11 @@ def main():
         return
     
     # Get filter options
-    filter_options = get_filter_options(df)
+    try:
+        filter_options = get_filter_options(df)
+    except Exception as e:
+        st.error(f"Error getting filter options: {e}")
+        return
     
     # Sidebar filters
     st.sidebar.header("🔍 Filters")
@@ -100,11 +104,19 @@ def main():
                                  filter_options['games_range'][1], 
                                  20)
     
-    # Points per game range
-    ppg_range = st.sidebar.slider("Points Per Game Range", 
-                                 filter_options['ppg_range'][0], 
-                                 filter_options['ppg_range'][1], 
-                                 filter_options['ppg_range'])
+    # Points per game range - with error handling
+    try:
+        ppg_range = st.sidebar.slider("Points Per Game Range", 
+                                     filter_options['ppg_range'][0], 
+                                     filter_options['ppg_range'][1], 
+                                     filter_options['ppg_range'])
+    except KeyError:
+        # Fallback if ppg_range is not available
+        ppg_min, ppg_max = 0.0, 50.0
+        if 'PTS' in df.columns:
+            ppg_min, ppg_max = 0.0, float(df['PTS'].max())
+        ppg_range = st.sidebar.slider("Points Per Game Range", 
+                                     ppg_min, ppg_max, (ppg_min, ppg_max))
     
     # Fantasy scoring weights customization
     st.sidebar.header("⚙️ Fantasy Scoring Weights")
