@@ -100,13 +100,46 @@ def main():
                                  filter_options['games_range'][1], 
                                  20)
     
+    # Points per game range
+    ppg_range = st.sidebar.slider("Points Per Game Range", 
+                                 filter_options['ppg_range'][0], 
+                                 filter_options['ppg_range'][1], 
+                                 filter_options['ppg_range'])
+    
+    # Fantasy scoring weights customization
+    st.sidebar.header("⚙️ Fantasy Scoring Weights")
+    st.sidebar.write("Customize how much each stat is worth in fantasy points:")
+    
+    pts_weight = st.sidebar.number_input("Points Weight", min_value=0.0, max_value=5.0, value=1.0, step=0.1)
+    reb_weight = st.sidebar.number_input("Rebounds Weight", min_value=0.0, max_value=5.0, value=1.25, step=0.1)
+    ast_weight = st.sidebar.number_input("Assists Weight", min_value=0.0, max_value=5.0, value=1.5, step=0.1)
+    stl_weight = st.sidebar.number_input("Steals Weight", min_value=0.0, max_value=5.0, value=2.0, step=0.1)
+    blk_weight = st.sidebar.number_input("Blocks Weight", min_value=0.0, max_value=5.0, value=2.0, step=0.1)
+    tov_weight = st.sidebar.number_input("Turnovers Weight (negative)", min_value=-5.0, max_value=0.0, value=-1.0, step=0.1)
+    
+    # Display current formula
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("**Current Formula:**")
+    st.sidebar.markdown(f"PTS({pts_weight}) + TRB({reb_weight}) + AST({ast_weight}) + STL({stl_weight}) + BLK({blk_weight}) + TOV({tov_weight})")
+    
+    # Store weights in session state
+    fantasy_weights = {
+        'PTS': pts_weight,
+        'TRB': reb_weight,
+        'AST': ast_weight,
+        'STL': stl_weight,
+        'BLK': blk_weight,
+        'TOV': tov_weight
+    }
+    st.session_state.fantasy_weights = fantasy_weights
+    
     # Validate filters
-    if not validate_filters(selected_pos, selected_team, age_range, min_games):
+    if not validate_filters(selected_pos, selected_team, age_range, min_games, ppg_range):
         st.error("Invalid filter settings. Please check your selections.")
         return
     
     # Apply filters
-    filtered_df = apply_filters(df, selected_pos, selected_team, age_range, min_games)
+    filtered_df = apply_filters(df, selected_pos, selected_team, age_range, min_games, ppg_range, fantasy_weights)
     
     # Main content tabs
     tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(["📊 Overview", "🎯 Top Picks", "📈 Player Analysis", "⚖️ Player Comparison", "🔍 Advanced Stats", "🤖 AI Assistant", "👨‍💻 About the Author"])
@@ -171,7 +204,7 @@ def main():
         st.header("🎯 Top Fantasy Picks")
         
         # Create fantasy ranking
-        ranked_df = create_fantasy_ranking(filtered_df, min_games)
+        ranked_df = create_fantasy_ranking(filtered_df, min_games, fantasy_weights)
         
         # Display top picks
         st.subheader("🏆 Top 20 Fantasy Picks")
@@ -633,7 +666,7 @@ def main():
     st.markdown("""
     <div style='text-align: center; color: #666;'>
         <p>🏀 NBA Fantasy League Dashboard | Built with Streamlit & Plotly</p>
-        <p>Data: 2024 NBA Player Statistics | Fantasy scoring: PTS(1) + TRB(1.2) + AST(1.5) + STL(2) + BLK(2) - TOV(1)</p>
+        <p>Data: 2024 NBA Player Statistics | Fantasy scoring: Customizable weights in sidebar</p>
     </div>
     """, unsafe_allow_html=True)
 

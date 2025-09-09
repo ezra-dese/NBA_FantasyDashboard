@@ -88,16 +88,23 @@ def get_filter_options(df: pd.DataFrame) -> Dict[str, List]:
         'positions': ['All'] + sorted(df['Pos'].unique().tolist()),
         'teams': ['All'] + sorted(df['Team'].unique().tolist()),
         'age_range': (int(df['Age'].min()), int(df['Age'].max())),
-        'games_range': (1, int(df['G'].max()))
+        'games_range': (1, int(df['G'].max())),
+        'ppg_range': (0.0, float(df['PTS'].max()))
     }
 
-def validate_filters(position: str, team: str, age_range: Tuple[int, int], min_games: int) -> bool:
+def validate_filters(position: str, team: str, age_range: Tuple[int, int], min_games: int, ppg_range: Tuple[float, float]) -> bool:
     """Validate filter inputs"""
     if not isinstance(age_range, tuple) or len(age_range) != 2:
         return False
     if age_range[0] > age_range[1]:
         return False
     if min_games < 0:
+        return False
+    if not isinstance(ppg_range, tuple) or len(ppg_range) != 2:
+        return False
+    if ppg_range[0] > ppg_range[1]:
+        return False
+    if ppg_range[0] < 0 or ppg_range[1] < 0:
         return False
     return True
 
