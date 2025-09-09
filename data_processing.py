@@ -10,6 +10,89 @@ from sklearn.cluster import KMeans
 import warnings
 warnings.filterwarnings('ignore')
 
+def load_bpm_coefficients():
+    """Load Box Plus Minus coefficients from the interpolation table"""
+    try:
+        bpm_df = pd.read_excel('Interpolation table values.xlsx')
+        
+        # Create a dictionary mapping position to coefficients
+        bpm_coefficients = {}
+        
+        for _, row in bpm_df.iterrows():
+            position = row['Position']
+            # Extract position number and convert to standard position names
+            if 'PG' in position:
+                pos_key = 'PG'
+            elif 'SG' in position:
+                pos_key = 'SG'
+            elif 'SF' in position:
+                pos_key = 'SF'
+            elif 'PF' in position:
+                pos_key = 'PF'
+            elif 'C' in position:
+                pos_key = 'C'
+            else:
+                continue
+                
+            bpm_coefficients[pos_key] = {
+                'PTS': row['PTS'],
+                '3P': row['3P'],
+                'AST': row['AST'],
+                'TOV': row['TOV'],
+                'ORB': row['ORB'],
+                'DRB': row['DRB'],
+                'STL': row['STL'],
+                'BLK': row['BLK'],
+                'PF': row['PF'],
+                'FGA': row['FGA'],
+                'FTA': row['FTA']
+            }
+        
+        return bpm_coefficients
+    except Exception as e:
+        print(f"Error loading BPM coefficients: {e}")
+        # Return default coefficients if file can't be loaded
+        return {
+            'PG': {'PTS': 0.86, '3P': 0.389, 'AST': 0.580, 'TOV': -0.964, 'ORB': 0.613, 'DRB': 0.116, 'STL': 1.369, 'BLK': 1.327, 'PF': -0.367, 'FGA': -0.560, 'FTA': -0.246},
+            'SG': {'PTS': 0.86, '3P': 0.389, 'AST': 0.694, 'TOV': -0.964, 'ORB': 0.505, 'DRB': 0.132, 'STL': 1.279, 'BLK': 1.171, 'PF': -0.367, 'FGA': -0.615, 'FTA': -0.270},
+            'SF': {'PTS': 0.86, '3P': 0.389, 'AST': 0.807, 'TOV': -0.964, 'ORB': 0.397, 'DRB': 0.149, 'STL': 1.189, 'BLK': 1.015, 'PF': -0.367, 'FGA': -0.670, 'FTA': -0.295},
+            'PF': {'PTS': 0.86, '3P': 0.389, 'AST': 0.921, 'TOV': -0.964, 'ORB': 0.289, 'DRB': 0.165, 'STL': 1.098, 'BLK': 0.859, 'PF': -0.367, 'FGA': -0.725, 'FTA': -0.319},
+            'C': {'PTS': 0.86, '3P': 0.389, 'AST': 1.034, 'TOV': -0.964, 'ORB': 0.181, 'DRB': 0.181, 'STL': 1.008, 'BLK': 0.703, 'PF': -0.367, 'FGA': -0.780, 'FTA': -0.343}
+        }
+
+def calculate_box_plus_minus(df, bpm_coefficients):
+    """Calculate Box Plus Minus for each player based on their position"""
+    bpm_values = []
+    
+    for _, player in df.iterrows():
+        position = player['Pos']
+        
+        # Get coefficients for the player's position
+        if position in bpm_coefficients:
+            coeffs = bpm_coefficients[position]
+        else:
+            # Default to PG coefficients if position not found
+            coeffs = bpm_coefficients['PG']
+        
+        # Calculate BPM using the formula: sum of (stat * coefficient)
+        bpm = (
+            player['PTS'] * coeffs['PTS'] +
+            player['3P'] * coeffs['3P'] +
+            player['AST'] * coeffs['AST'] +
+            player['TOV'] * coeffs['TOV'] +
+            player['ORB'] * coeffs['ORB'] +
+            player['DRB'] * coeffs['DRB'] +
+            player['STL'] * coeffs['STL'] +
+            player['BLK'] * coeffs['BLK'] +
+            player['PF'] * coeffs['PF'] +
+            player['FGA'] * coeffs['FGA'] +
+            player['FTA'] * coeffs['FTA']
+        )
+        
+        bpm_values.append(bpm)
+    
+    return np.array(bpm_values)
+
 def calculate_fantasy_points_with_weights(df, weights=None):
     """Calculate fantasy points using custom weights"""
     if weights is None:
@@ -71,6 +154,26 @@ def load_data():
         denominator_tov = df['FGA'] + 0.475 * df['FTA'] + df['AST'] + df['TOV']
         df['TOV%'] = np.where(denominator_tov > 0, df['TOV'] / denominator_tov, 0)
         
+        # Game Score per game = PTS + 0.4*FG – 0.7*FGA – 0.4*(FTA – FT) + 0.7*ORB + 0.3*DRB + STL + 0.7*AST + 0.7*BLK – 0.4*PF – TOV
+        df['Game_Score'] = (
+            df['PTS'] + 
+            0.4 * df['FG'] - 
+            0.7 * df['FGA'] - 
+            0.4 * (df['FTA'] - df['FT']) + 
+            0.7 * df['ORB'] + 
+            0.3 * df['DRB'] + 
+            df['STL'] + 
+            0.7 * df['AST'] + 
+            0.7 * df['BLK'] - 
+            0.4 * df['PF'] - 
+            df['TOV']
+        )
+        
+        # Load Box Plus Minus coefficients
+        bpm_coefficients = load_bpm_coefficients()
+        
+        # Calculate Box Plus Minus for each player based on their position
+        df['BPM'] = calculate_box_plus_minus(df, bpm_coefficients)
         
         # Create player clusters for similar players
         df = create_player_clusters(df)

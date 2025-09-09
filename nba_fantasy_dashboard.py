@@ -317,6 +317,8 @@ def main():
             
             with col3:
                 st.metric("TOV%", format_percentage(player_summary['tov_percentage']))
+                st.metric("Game Score", format_stat(player_summary['game_score']))
+                st.metric("BPM", format_stat(player_summary['bpm']))
             
             # Similar players
             st.subheader("🔍 Similar Players")
@@ -382,7 +384,7 @@ def main():
             
             # Advanced stats comparison
             st.subheader("🔬 Advanced Statistics Comparison")
-            advanced_stats = ['eFG%', 'TS%', 'FTR', 'AST_TOV_Ratio', 'hAST%', 'TOV%']
+            advanced_stats = ['eFG%', 'TS%', 'FTR', 'AST_TOV_Ratio', 'hAST%', 'TOV%', 'Game_Score', 'BPM']
             fig_advanced = create_advanced_stats_comparison_chart(players_data, player_names, advanced_stats)
             st.plotly_chart(fig_advanced, use_container_width=True)
             
@@ -409,7 +411,9 @@ def main():
                     'TS%': format_percentage(player_summary['ts_percentage']),
                     'AST/TOV': format_stat(player_summary['ast_tov_ratio'], 2),
                     'hAST%': format_percentage(player_summary['hast_percentage']),
-                    'TOV%': format_percentage(player_summary['tov_percentage'])
+                    'TOV%': format_percentage(player_summary['tov_percentage']),
+                    'Game Score': format_stat(player_summary['game_score']),
+                    'BPM': format_stat(player_summary['bpm'])
                 })
             
             comparison_df = pd.DataFrame(comparison_data)
@@ -460,6 +464,16 @@ def main():
             - **Formula:** TOV / (FGA + 0.475 × FTA + AST + TOV)
             - **What it measures:** Percentage of possessions that end in a turnover
             - **Why it matters:** Lower percentages indicate better ball security and decision-making
+            
+            **🎮 Game Score**
+            - **Formula:** PTS + 0.4×FG – 0.7×FGA – 0.4×(FTA – FT) + 0.7×ORB + 0.3×DRB + STL + 0.7×AST + 0.7×BLK – 0.4×PF – TOV
+            - **What it measures:** Overall game impact using box score statistics
+            - **Why it matters:** Higher game scores indicate more impactful individual performances
+            
+            **📊 Box Plus Minus (BPM)**
+            - **Formula:** Position-adjusted calculation using interpolation table coefficients
+            - **What it measures:** Player's contribution per 100 possessions relative to league average
+            - **Why it matters:** Accounts for position-specific roles and provides context-adjusted performance metrics
             """)
         
         # Advanced Statistics Charts
@@ -480,14 +494,14 @@ def main():
             
             with col1:
                 stat_choice1 = st.selectbox("Select Statistic 1", 
-                    ['eFG%', 'TS%', 'FTR', 'AST_TOV_Ratio', 'hAST%', 'TOV%'], key="dist1")
+                    ['eFG%', 'TS%', 'FTR', 'AST_TOV_Ratio', 'hAST%', 'TOV%', 'Game_Score', 'BPM'], key="dist1")
                 if stat_choice1:
                     fig1 = create_advanced_stats_distribution_chart(filtered_df, stat_choice1)
                     st.plotly_chart(fig1, use_container_width=True)
             
             with col2:
                 stat_choice2 = st.selectbox("Select Statistic 2", 
-                    ['eFG%', 'TS%', 'FTR', 'AST_TOV_Ratio', 'hAST%', 'TOV%'], key="dist2")
+                    ['eFG%', 'TS%', 'FTR', 'AST_TOV_Ratio', 'hAST%', 'TOV%', 'Game_Score', 'BPM'], key="dist2")
                 if stat_choice2 and stat_choice2 != stat_choice1:
                     fig2 = create_advanced_stats_distribution_chart(filtered_df, stat_choice2)
                     st.plotly_chart(fig2, use_container_width=True)
@@ -499,11 +513,11 @@ def main():
             
             with col1:
                 x_stat = st.selectbox("X-Axis Statistic", 
-                    ['eFG%', 'TS%', 'FTR', 'AST_TOV_Ratio', 'hAST%', 'TOV%'], key="scatter_x")
+                    ['eFG%', 'TS%', 'FTR', 'AST_TOV_Ratio', 'hAST%', 'TOV%', 'Game_Score', 'BPM'], key="scatter_x")
             
             with col2:
                 y_stat = st.selectbox("Y-Axis Statistic", 
-                    ['eFG%', 'TS%', 'FTR', 'AST_TOV_Ratio', 'hAST%', 'TOV%'], key="scatter_y")
+                    ['eFG%', 'TS%', 'FTR', 'AST_TOV_Ratio', 'hAST%', 'TOV%', 'Game_Score', 'BPM'], key="scatter_y")
             
             if x_stat and y_stat and x_stat != y_stat:
                 fig = create_advanced_stats_scatter(filtered_df, x_stat, y_stat)

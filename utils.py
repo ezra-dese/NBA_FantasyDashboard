@@ -70,7 +70,9 @@ def get_player_summary(player_data: pd.Series) -> Dict:
         'hast_percentage': safe_get('hAST%', 0.0),
         'tov_percentage': safe_get('TOV%', 0.0),
         'player_type': safe_get('Player_Type', 'Other'),
-        'minutes': safe_get('MP', 0.0)
+        'minutes': safe_get('MP', 0.0),
+        'game_score': safe_get('Game_Score', 0.0),
+        'bpm': safe_get('BPM', 0.0)
     }
 
 
