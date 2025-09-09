@@ -46,6 +46,22 @@ class NBAFantasyChatbot:
         elif any(word in query_lower for word in ['position', 'pg', 'sg', 'sf', 'pf', 'c', 'guard', 'forward', 'center']):
             return self._handle_position_query(query)
         
+        # League insights and analysis
+        elif any(word in query_lower for word in ['league', 'average', 'insights', 'analysis', 'trends']):
+            return self._handle_league_insights_query(query)
+        
+        # Draft strategy and team building
+        elif any(word in query_lower for word in ['strategy', 'team building', 'roster', 'draft strategy']):
+            return self._handle_draft_strategy_query(query)
+        
+        # Trade and value analysis
+        elif any(word in query_lower for word in ['trade', 'value', 'worth', 'overvalued', 'undervalued']):
+            return self._handle_trade_analysis_query(query)
+        
+        # Waiver wire and streaming
+        elif any(word in query_lower for word in ['waiver', 'streaming', 'pickup', 'add', 'drop']):
+            return self._handle_waiver_wire_query(query)
+        
         # General help
         elif any(word in query_lower for word in ['help', 'what can', 'how to', 'explain']):
             return self._handle_help_query()
@@ -158,8 +174,47 @@ class NBAFantasyChatbot:
                 response += f"{i}. **{player['Player']}** ({player['Team']}) - {player['AST']:.1f} APG\n"
             return response
         
+        # Advanced statistics queries
+        elif 'game score' in query_lower:
+            top_game_score = self.df.nlargest(5, 'Game_Score')
+            response = "**Top 5 Game Score Leaders:**\n\n"
+            for i, (_, player) in enumerate(top_game_score.iterrows(), 1):
+                response += f"{i}. **{player['Player']}** ({player['Team']}) - {player['Game_Score']:.1f} Game Score\n"
+            response += "\n💡 **Game Score** measures overall game impact using box score statistics."
+            return response
+        
+        elif 'bpm' in query_lower or 'box plus minus' in query_lower:
+            top_bpm = self.df.nlargest(5, 'BPM')
+            response = "**Top 5 Box Plus Minus Leaders:**\n\n"
+            for i, (_, player) in enumerate(top_bpm.iterrows(), 1):
+                response += f"{i}. **{player['Player']}** ({player['Team']}) - {player['BPM']:.1f} BPM\n"
+            response += "\n💡 **BPM** measures player's contribution per 100 possessions relative to league average."
+            return response
+        
+        elif 'efficiency' in query_lower:
+            top_efficiency = self.df.nlargest(5, 'TS%')
+            response = "**Top 5 Most Efficient Scorers (True Shooting %):**\n\n"
+            for i, (_, player) in enumerate(top_efficiency.iterrows(), 1):
+                response += f"{i}. **{player['Player']}** ({player['Team']}) - {player['TS%']:.1f}% TS\n"
+            response += "\n💡 **True Shooting %** accounts for 2-pointers, 3-pointers, and free throws."
+            return response
+        
+        elif 'steals' in query_lower:
+            top_steals = self.df.nlargest(5, 'STL')
+            response = "**Top 5 Steal Leaders:**\n\n"
+            for i, (_, player) in enumerate(top_steals.iterrows(), 1):
+                response += f"{i}. **{player['Player']}** ({player['Team']}) - {player['STL']:.1f} SPG\n"
+            return response
+        
+        elif 'blocks' in query_lower:
+            top_blocks = self.df.nlargest(5, 'BLK')
+            response = "**Top 5 Block Leaders:**\n\n"
+            for i, (_, player) in enumerate(top_blocks.iterrows(), 1):
+                response += f"{i}. **{player['Player']}** ({player['Team']}) - {player['BLK']:.1f} BPG\n"
+            return response
+        
         else:
-            return "I can help you find top performers! Try asking about 'top fantasy players', 'top scorers', 'top rebounders', or 'top assist leaders'."
+            return "I can help you find top performers! Try asking about 'top fantasy players', 'top scorers', 'top rebounders', 'top assist leaders', 'game score leaders', 'BPM leaders', or 'most efficient scorers'."
     
     def _handle_fantasy_query(self, query: str) -> str:
         """Handle fantasy-related queries and recommendations"""
@@ -331,6 +386,10 @@ I can help you with:
 - "Best scorers"
 - "Top rebounders"
 - "Assist leaders"
+- "Game score leaders"
+- "BPM leaders"
+- "Most efficient scorers"
+- "Top steals/blocks"
 
 **🎯 Fantasy Recommendations:**
 - "Draft picks"
@@ -350,6 +409,27 @@ I can help you with:
 - "Best centers"
 - "Top point guards"
 - "Power forwards"
+
+**📈 League Insights:**
+- "League averages"
+- "Position distribution"
+- "Elite players analysis"
+- "Best teams"
+
+**🎯 Draft Strategy:**
+- "Draft strategy"
+- "Position scarcity"
+- "Team building"
+
+**💰 Trade Analysis:**
+- "Overvalued players"
+- "Undervalued players"
+- "Trade value"
+
+**📋 Waiver Wire:**
+- "Waiver wire targets"
+- "Streaming strategy"
+- "Add/drop advice"
 
 Just ask me anything about NBA players and fantasy basketball! 🏀
         """
@@ -430,3 +510,246 @@ Just ask me anything about NBA players and fantasy basketball! 🏀
                 return match.group(1).strip()
         
         return None
+    
+    def _handle_league_insights_query(self, query: str) -> str:
+        """Handle league-wide insights and analysis queries"""
+        query_lower = query.lower()
+        
+        # League averages
+        if 'average' in query_lower or 'league average' in query_lower:
+            avg_fantasy = self.df['Fantasy_Points'].mean()
+            avg_points = self.df['PTS'].mean()
+            avg_rebounds = self.df['TRB'].mean()
+            avg_assists = self.df['AST'].mean()
+            avg_steals = self.df['STL'].mean()
+            avg_blocks = self.df['BLK'].mean()
+            
+            response = "**📊 2024 NBA League Averages:**\n\n"
+            response += f"• **Fantasy Points:** {avg_fantasy:.1f} per game\n"
+            response += f"• **Points:** {avg_points:.1f} PPG\n"
+            response += f"• **Rebounds:** {avg_rebounds:.1f} RPG\n"
+            response += f"• **Assists:** {avg_assists:.1f} APG\n"
+            response += f"• **Steals:** {avg_steals:.1f} SPG\n"
+            response += f"• **Blocks:** {avg_blocks:.1f} BPG\n\n"
+            response += f"**Total Players Analyzed:** {len(self.df)}"
+            return response
+        
+        # Position distribution
+        elif 'position' in query_lower and 'distribution' in query_lower:
+            pos_counts = self.df['Pos'].value_counts()
+            response = "**🏀 Position Distribution in NBA:**\n\n"
+            for pos, count in pos_counts.items():
+                percentage = (count / len(self.df)) * 100
+                response += f"• **{pos}:** {count} players ({percentage:.1f}%)\n"
+            return response
+        
+        # Elite players analysis
+        elif 'elite' in query_lower or 'superstars' in query_lower:
+            elite_threshold = self.df['Fantasy_Points'].quantile(0.9)  # Top 10%
+            elite_players = self.df[self.df['Fantasy_Points'] >= elite_threshold]
+            
+            response = f"**⭐ Elite Players Analysis (Top 10% - {elite_threshold:.1f}+ FP):**\n\n"
+            response += f"**Total Elite Players:** {len(elite_players)}\n\n"
+            
+            # Position breakdown of elite players
+            elite_pos = elite_players['Pos'].value_counts()
+            response += "**Position Breakdown:**\n"
+            for pos, count in elite_pos.items():
+                response += f"• **{pos}:** {count} players\n"
+            
+            # Top 5 elite players
+            top_elite = elite_players.nlargest(5, 'Fantasy_Points')
+            response += "\n**Top 5 Elite Players:**\n"
+            for i, (_, player) in enumerate(top_elite.iterrows(), 1):
+                response += f"{i}. **{player['Player']}** - {player['Fantasy_Points']:.1f} FP\n"
+            
+            return response
+        
+        # Team analysis
+        elif 'team' in query_lower and ('best' in query_lower or 'strongest' in query_lower):
+            team_avg_fantasy = self.df.groupby('Team')['Fantasy_Points'].mean().sort_values(ascending=False)
+            response = "**🏆 Teams Ranked by Average Fantasy Points:**\n\n"
+            for i, (team, avg_fp) in enumerate(team_avg_fantasy.head(10).items(), 1):
+                response += f"{i}. **{team}:** {avg_fp:.1f} avg FP\n"
+            return response
+        
+        else:
+            return "I can provide league insights! Try asking about 'league averages', 'position distribution', 'elite players', or 'best teams'."
+    
+    def _handle_draft_strategy_query(self, query: str) -> str:
+        """Handle draft strategy and team building queries"""
+        query_lower = query.lower()
+        
+        # Draft strategy
+        if 'draft strategy' in query_lower or 'draft order' in query_lower:
+            response = "**🎯 Fantasy Draft Strategy Guide:**\n\n"
+            response += "**Round 1-2: Build Your Foundation**\n"
+            response += "• Target elite fantasy players (35+ FP)\n"
+            response += "• Prioritize players with high usage rates\n"
+            response += "• Consider position scarcity\n\n"
+            
+            response += "**Round 3-5: Fill Key Positions**\n"
+            response += "• Draft your starting lineup positions\n"
+            response += "• Look for consistent performers (25-35 FP)\n"
+            response += "• Balance scoring and defensive stats\n\n"
+            
+            response += "**Round 6-10: Depth and Value**\n"
+            response += "• Target sleepers and undervalued players\n"
+            response += "• Fill bench positions\n"
+            response += "• Consider streaming options\n\n"
+            
+            response += "**Round 11+: High-Upside Picks**\n"
+            response += "• Take calculated risks on young players\n"
+            response += "• Handcuff your stars\n"
+            response += "• Prepare for waiver wire moves"
+            return response
+        
+        # Position scarcity
+        elif 'position scarcity' in query_lower or 'scarcity' in query_lower:
+            pos_avg_fantasy = self.df.groupby('Pos')['Fantasy_Points'].mean().sort_values(ascending=False)
+            response = "**📊 Position Scarcity Analysis:**\n\n"
+            response += "**Average Fantasy Points by Position:**\n"
+            for pos, avg_fp in pos_avg_fantasy.items():
+                response += f"• **{pos}:** {avg_fp:.1f} avg FP\n"
+            
+            response += "\n**💡 Draft Strategy:**\n"
+            response += "• **Centers** are typically the scarcest position\n"
+            response += "• **Point Guards** provide the most assists\n"
+            response += "• **Forwards** offer the best balance of stats\n"
+            response += "• Consider drafting elite players at scarce positions early"
+            return response
+        
+        # Team building
+        elif 'team building' in query_lower or 'roster construction' in query_lower:
+            response = "**🏗️ Fantasy Team Building Guide:**\n\n"
+            response += "**Ideal Roster Construction:**\n"
+            response += "• **2 Point Guards** (assists, steals)\n"
+            response += "• **2 Shooting Guards** (scoring, 3-pointers)\n"
+            response += "• **2 Small Forwards** (versatile stats)\n"
+            response += "• **2 Power Forwards** (rebounds, blocks)\n"
+            response += "• **2 Centers** (rebounds, blocks, FG%)\n"
+            response += "• **3 Utility/Bench** (flexibility)\n\n"
+            
+            response += "**Key Principles:**\n"
+            response += "• Balance scoring and defensive categories\n"
+            response += "• Don't punt categories early in the draft\n"
+            response += "• Build depth for injury protection\n"
+            response += "• Keep roster spots flexible for streaming"
+            return response
+        
+        else:
+            return "I can help with draft strategy! Try asking about 'draft strategy', 'position scarcity', or 'team building'."
+    
+    def _handle_trade_analysis_query(self, query: str) -> str:
+        """Handle trade and value analysis queries"""
+        query_lower = query.lower()
+        
+        # Overvalued players
+        if 'overvalued' in query_lower:
+            # Find players with high fantasy points but poor efficiency
+            overvalued = self.df[
+                (self.df['Fantasy_Points'] > 25) & 
+                (self.df['TS%'] < 0.5) & 
+                (self.df['TOV'] > 3)
+            ].nlargest(5, 'Fantasy_Points')
+            
+            response = "**⚠️ Potentially Overvalued Players:**\n\n"
+            response += "These players have good fantasy points but poor efficiency:\n\n"
+            for i, (_, player) in enumerate(overvalued.iterrows(), 1):
+                response += f"{i}. **{player['Player']}** - {player['Fantasy_Points']:.1f} FP, {player['TS%']:.1%} TS, {player['TOV']:.1f} TOV\n"
+            response += "\n💡 **Consider trading these players** while their value is high."
+            return response
+        
+        # Undervalued players
+        elif 'undervalued' in query_lower:
+            # Find players with good efficiency but lower fantasy points
+            undervalued = self.df[
+                (self.df['Fantasy_Points'] < 30) & 
+                (self.df['TS%'] > 0.6) & 
+                (self.df['AST_TOV_Ratio'] > 2)
+            ].nlargest(5, 'TS%')
+            
+            response = "**💎 Undervalued Players (Buy Low):**\n\n"
+            response += "These players have great efficiency but lower fantasy points:\n\n"
+            for i, (_, player) in enumerate(undervalued.iterrows(), 1):
+                response += f"{i}. **{player['Player']}** - {player['Fantasy_Points']:.1f} FP, {player['TS%']:.1%} TS, {player['AST_TOV_Ratio']:.1f} A/T\n"
+            response += "\n💡 **Target these players** in trades for better value."
+            return response
+        
+        # Trade value analysis
+        elif 'trade value' in query_lower or 'worth' in query_lower:
+            response = "**💰 Trade Value Analysis:**\n\n"
+            response += "**High Trade Value Players:**\n"
+            response += "• Elite fantasy producers (35+ FP)\n"
+            response += "• Players at scarce positions (C, PG)\n"
+            response += "• Consistent performers with low injury risk\n\n"
+            
+            response += "**Trade Value Factors:**\n"
+            response += "• **Fantasy Points** - Primary value indicator\n"
+            response += "• **Position Scarcity** - Centers and PGs are valuable\n"
+            response += "• **Consistency** - Low variance in performance\n"
+            response += "• **Injury Risk** - Games played and minutes\n"
+            response += "• **Age** - Younger players have more upside"
+            return response
+        
+        else:
+            return "I can help with trade analysis! Try asking about 'overvalued players', 'undervalued players', or 'trade value'."
+    
+    def _handle_waiver_wire_query(self, query: str) -> str:
+        """Handle waiver wire and streaming queries"""
+        query_lower = query.lower()
+        
+        # Waiver wire targets
+        if 'waiver wire' in query_lower or 'pickup' in query_lower:
+            # Find players with decent fantasy points but lower recognition
+            waiver_targets = self.df[
+                (self.df['Fantasy_Points'] > 20) & 
+                (self.df['Fantasy_Points'] < 30) &
+                (self.df['G'] > 50)  # Played most games
+            ].nlargest(10, 'Fantasy_Points')
+            
+            response = "**📋 Waiver Wire Targets:**\n\n"
+            response += "Players with solid fantasy value who might be available:\n\n"
+            for i, (_, player) in enumerate(waiver_targets.iterrows(), 1):
+                response += f"{i}. **{player['Player']}** ({player['Team']}) - {player['Fantasy_Points']:.1f} FP\n"
+            response += "\n💡 **Streaming Strategy:** Pick up players based on matchups and schedule."
+            return response
+        
+        # Streaming options
+        elif 'streaming' in query_lower:
+            response = "**🔄 Streaming Strategy Guide:**\n\n"
+            response += "**What is Streaming?**\n"
+            response += "• Adding/dropping players based on schedule\n"
+            response += "• Maximizing games played in a week\n"
+            response += "• Targeting specific categories\n\n"
+            
+            response += "**Best Streaming Positions:**\n"
+            response += "• **Point Guards** - High assist potential\n"
+            response += "• **Centers** - Rebound and block specialists\n"
+            response += "• **3-Point Specialists** - SG/SF with high 3P%\n\n"
+            
+            response += "**Streaming Tips:**\n"
+            response += "• Check team schedules (back-to-backs)\n"
+            response += "• Target players in fast-paced games\n"
+            response += "• Consider opponent defensive rankings\n"
+            response += "• Don't stream your core players"
+            return response
+        
+        # Add/drop advice
+        elif 'add' in query_lower or 'drop' in query_lower:
+            response = "**➕➖ Add/Drop Advice:**\n\n"
+            response += "**Players to ADD:**\n"
+            response += "• High-usage players on good teams\n"
+            response += "• Players returning from injury\n"
+            response += "• Rookies with increasing minutes\n"
+            response += "• Players in favorable matchups\n\n"
+            
+            response += "**Players to DROP:**\n"
+            response += "• Injured players with no return timeline\n"
+            response += "• Players losing minutes/role\n"
+            response += "• Inefficient players with poor shooting\n"
+            response += "• Players on tanking teams"
+            return response
+        
+        else:
+            return "I can help with waiver wire strategy! Try asking about 'waiver wire targets', 'streaming strategy', or 'add/drop advice'."

@@ -547,9 +547,9 @@ def main():
         st.header("🤖 AI Assistant")
         st.write("Ask me anything about NBA players, stats, or fantasy recommendations!")
         
-        # Initialize chatbot
+        # Initialize chatbot with full dataset for accurate top player recommendations
         if 'chatbot' not in st.session_state:
-            st.session_state.chatbot = NBAFantasyChatbot(filtered_df)
+            st.session_state.chatbot = NBAFantasyChatbot(df)
         
         # Chat interface
         user_input = st.text_input("Ask me anything:", placeholder="e.g., 'Tell me about LeBron James' or 'Top fantasy players'")
@@ -572,7 +572,12 @@ def main():
             "Compare LeBron James vs Stephen Curry",
             "Fantasy sleepers",
             "Lakers players",
-            "Who should I draft first?"
+            "Who should I draft first?",
+            "League averages",
+            "Game score leaders",
+            "Draft strategy",
+            "Overvalued players",
+            "Waiver wire targets"
         ]
         
         for query in example_queries:
